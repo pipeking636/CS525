@@ -1,2 +1,2 @@
 # CS525
-CS525 assignment
+This is repository of CS525 assignments
