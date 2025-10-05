@@ -46,9 +46,9 @@ typedef struct Schema
 // TableData: Management Structure for a Record Manager to handle one relation
 typedef struct RM_TableData
 {
-	char *name;
-	Schema *schema;
-	void *mgmtData;
+	char *name; 	// name of the relation
+	Schema *schema; // schema of the relation
+	void *mgmtData; // pointer to any other management information the record manager needs
 } RM_TableData;
 
 #define MAKE_STRING_VALUE(result, value)				\

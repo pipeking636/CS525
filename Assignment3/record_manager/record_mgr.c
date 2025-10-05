@@ -1,6 +1,8 @@
 #include "buffer_mgr.h"
 #include "storage_mgr.h"
 #include "record_mgr.h"
+#include "tables.h"
+#include "dberror.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -32,38 +34,277 @@ typedef struct RM_TableMgmt {
 } RM_TableMgmt;
 
 // table and manager
+/**
+ * @brief record manager initialization
+ * 
+ * @param mgmtData, pointer to the record manager management data, not used in this function
+ * @return RC_OK
+ */
 RC initRecordManager (void *mgmtData)
 {
+    initStorageManager(); // 初始化存储管理器
     return RC_OK;
 }
+
+/**
+ * @brief record manager shutdown
+ * 
+ * @return RC_OK
+ */
 RC shutdownRecordManager ()
 {
     return RC_OK;
 }
+/**
+ * @brief create a table, write table info to page 0
+ * 
+ * @param name, name of the table
+ * @param schema, schema of the table
+ * @return RC_OK
+ */
 RC createTable (char *name, Schema *schema)
 {
+    // 1. create page file
+    if(createPageFile(name) != RC_OK)
+        return RC_FILE_HANDLE_NOT_INIT;
+    // 2. initialize table info (page 0)
+    SM_FileHandle fh;
+    if(openPageFile(name, &fh) != RC_OK)
+        return RC_FILE_HANDLE_NOT_INIT;
+    // calculate record size
+    int recordSize = getRecordSize(schema);
+    if(recordSize <= 0)
+    {
+        closePageFile(&fh);
+        return RC_UNVALID_HANDLE;
+    }
+    // initialize table info
+    TableInfo tableInfo;
+    strcpy(tableInfo.tableName, name); //table name keep normal string length and "\0" ending
+    tableInfo.schema = *schema; // copy schema, please note dynamic memory in schema
+    tableInfo.numTuples = 0; // no tuple in the table yet
+    tableInfo.totalPages = 1; // at least one page for table info
+    tableInfo.freePageListHead = -1; // no free page
+    tableInfo.recordSize = recordSize; // record size is fixed
+    // write table info to page 0
+    SM_PageHandle page = (SM_PageHandle)calloc(PAGE_SIZE, sizeof(char));
+    memcpy(page, &tableInfo, sizeof(TableInfo));
+    if (writeBlock(0, &fh, page) != RC_OK)
+    {
+        free(page);
+        closePageFile(&fh);
+        return RC_WRITE_FAILED;
+    }
+    free(page);
+    closePageFile(&fh);
     return RC_OK;
 }
+/**
+ * @brief open a table, read table info from page 0
+ * 
+ * @param rel, pointer to the table data
+ * @param name, name of the table
+ * @return RC_OK
+ */
 RC openTable (RM_TableData *rel, char *name)
 {
+    RC ret = RC_OK;
+
+    if(rel == NULL || name == NULL)
+        return RC_UNVALID_HANDLE; 
+
+    // 1. initialize RM_TableData
+    rel->name = strdup(name); // copy table name, please note dynamic memory in string
+    rel->schema = (Schema *)malloc(sizeof(Schema)); // copy schema, please note dynamic memory in schema
+    rel->mgmtData =(RM_TableMgmt *)malloc(sizeof(RM_TableMgmt)); // copy mgmtData, please note dynamic memory in mgmtData
+    RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData; // cast mgmtData to RM_TableMgmt
+    // 2. initialize buffer pool (use FIFO policy)
+    ret = initBufferPool(&mgmt->bufferPool, name, 10, RS_FIFO, NULL);
+    if ( ret != RC_OK)
+    {
+        free(rel->name);
+        free(rel->schema);
+        free(rel->mgmtData);
+        return ret;
+    }
+    // 3. read table info from page 0
+    BM_PageHandle ph;
+    ret = pinPage(&mgmt->bufferPool, 0, &ph);
+    if( ret != RC_OK)
+    {
+        free(rel->name);
+        free(rel->schema);
+        free(rel->mgmtData);
+        return ret;
+    }
+    // copy table info to mgmt
+    TableInfo *tableInfo = (TableInfo *)ph.data;
+    mgmt->tableInfo = *tableInfo; // copy table info, please note dynamic memory in schema
+    *rel->schema = mgmt->tableInfo.schema; // copy schema, please note dynamic memory in schema
+    // 4. unpin page 0
+    ret = unpinPage(&mgmt->bufferPool, &ph);
+    if( ret != RC_OK)
+    {
+        free(rel->name);
+        free(rel->schema);
+        free(rel->mgmtData);
+        return ret;
+    }
     return RC_OK;
 }
+/**
+ * @brief close a table, release buffer pool
+ * 
+ * @param rel, pointer to the table data
+ * @return RC_OK
+ */
 RC closeTable (RM_TableData *rel)
 {
+    RC ret = RC_OK;
+    if(rel == NULL || rel->mgmtData == NULL)
+        return RC_UNVALID_HANDLE;
+    RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData; // cast mgmtData to RM_TableMgmt
+    // close buffer pool
+    ret = shutdownBufferPool(&mgmt->bufferPool);
+    if( ret != RC_OK)
+    {
+        /*maybe need more error handling*/
+        return ret;
+    }
+
+    // release table info
+    free(rel->name);
+    free(rel->schema);
+    free(rel->mgmtData);
+    rel->name = NULL;
+    rel->schema = NULL;
+    rel->mgmtData = NULL;
     return RC_OK;
 }
+/**
+ * @brief delete a table, release buffer pool
+ * 
+ * @param name, name of the table
+ * @return RC_OK
+ */
 RC deleteTable (char *name)
 {
-    return RC_OK;
+    if(name == NULL)
+        return RC_UNVALID_HANDLE;
+    return destroyPageFile(name);
 }
+/**
+ * @brief get number of tuples in a table
+ * 
+ * @param rel, pointer to the table data
+ * @return number of tuples
+ */
 int getNumTuples (RM_TableData *rel)
 {
-    return -1;
+    if(rel == NULL || rel->mgmtData == NULL)
+        return RC_UNVALID_HANDLE;
+    RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData; // cast mgmtData to RM_TableMgmt
+    return mgmt->tableInfo.numTuples;
 }
 
 // handling records in a table
+/**
+ * @brief insert a record into a table
+ * 
+ * @param rel, pointer to the table data
+ * @param record, pointer to the record
+ * @return RC_OK
+ */
 RC insertRecord (RM_TableData *rel, Record *record)
 {
+    RC ret = RC_OK;
+
+    if(rel == NULL || rel->mgmtData == NULL || record == NULL)
+        return RC_UNVALID_HANDLE;
+    // get record size
+    RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData; // cast mgmtData to RM_TableMgmt
+    int recordSize = mgmt->tableInfo.recordSize;
+    // 1. pin first page (page 1)
+    BM_PageHandle ph;
+    ret = pinPage(&mgmt->bufferPool, &ph, 1); // 是固定的吗？
+    if( ret != RC_OK)
+    {
+        // pin page 1 failed, create new page
+        SM_FileHandle *fh = ((BM_MgmtData *)(mgmt->bufferPool.mgmtData))->fileHandle; //这句话有错误，BM_MgmtData结构体是私有结构体，不应该在这里被显式使用
+        ret = appendEmptyBlock(fh);
+        if( ret != RC_OK) return ret;
+        // pin new page
+        ret = pinPage(&mgmt->bufferPool, &ph, 1); // 是固定的吗？
+        if( ret != RC_OK) return ret;
+    }
+
+    // 2. calculate data offset(simple way, append at the end of the page header)
+    PageHeader *pageHeader = (PageHeader *)ph.data;
+    if(pageHeader->isTableInfoPage)
+    {
+        pageHeader->isTableInfoPage = false; 
+        pageHeader->freeSpaceOffset = sizeof(PageHeader); // after header
+        pageHeader->slotCount = 0;
+        pageHeader->nextFreePage = -1;
+    }
+
+    int freeSpace = PAGE_SIZE - pageHeader->freeSpaceOffset;
+    if (freeSpace < recordSize)
+    {
+        unpinPage(&mgmt->bufferPool, &ph);
+        return RC_PAGE_NOT_FOUND;
+    }
+
+    // 3. copy record to data page
+    memcpy(ph.data + pageHeader->freeSpaceOffset, record->data, recordSize);
+    // 4. set RID
+    record->id.page = 1; // 是固定的吗？
+    record->id.slot = pageHeader->slotCount; 
+    // 5. update page header
+    pageHeader->freeSpaceOffset += recordSize;
+    pageHeader->slotCount++;
+    mgmt->tableInfo.numTuples++;
+    markDirty(&mgmt->bufferPool, &ph);
+    // 6. unpin page 1
+    ret = unpinPage(&mgmt->bufferPool, &ph);
+    if( ret != RC_OK) return ret;
+    
+    return RC_OK;
+}
+/**
+ * @brief get a record from a table
+ * 
+ * @param rel, pointer to the table data
+ * @param id, RID of the record
+ * @param record, pointer to the record
+ * @return RC_OK
+ */
+RC getRecord (RM_TableData *rel, RID id, Record *record)
+{
+    RC ret;
+    if(rel == NULL || rel->mgmtData == NULL || record == NULL)
+        return RC_UNVALID_HANDLE;
+
+    RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData; // cast mgmtData to RM_TableMgmt
+    int recordSize = mgmt->tableInfo.recordSize;
+    // 1. pin page
+    BM_PageHandle ph;
+    ret = pinPage(&mgmt->bufferPool, &ph, id.page);
+    if( ret != RC_OK) return ret;
+    // 2. calculate data offset
+    PageHeader *pageHeader = (PageHeader *)ph.data;
+    int dataOffset = sizeof(PageHeader) + id.slot * recordSize;
+    if(dataOffset + recordSize > pageHeader->freeSpaceOffset)
+    {
+        unpinPage(&mgmt->bufferPool, &ph);
+        return RC_RM_NO_MORE_TUPLES;
+    }
+    // 3. copy record to record
+    memcpy(record->data, ph.data + dataOffset, recordSize);
+    // 4. set RID
+    record->id = id;
+    ret = unpinPage(&mgmt->bufferPool, &ph);
+    if( ret != RC_OK) return ret;   
     return RC_OK;
 }
 RC deleteRecord (RM_TableData *rel, RID id)
@@ -71,10 +312,6 @@ RC deleteRecord (RM_TableData *rel, RID id)
     return RC_OK;
 }
 RC updateRecord (RM_TableData *rel, Record *record)
-{
-    return RC_OK;
-}
-RC getRecord (RM_TableData *rel, RID id, Record *record)
 {
     return RC_OK;
 }
@@ -92,28 +329,111 @@ RC closeScan (RM_ScanHandle *scan)
 }
 
 // dealing with schemas
+/**
+ * @brief get record size in bytes
+ * 
+ * @param schema, pointer to the schema
+ * @return record size in bytes
+ */
 int getRecordSize (Schema *schema)
 {
-    return -1;
+    if(schema == NULL)
+        return RC_UNVALID_HANDLE;
+    int size = 0;
+    for(int i = 0; i < schema->numAttr; i++)
+    {
+        switch(schema->dataTypes[i])
+        {
+            case DT_INT: size += sizeof(int); break;
+            case DT_STRING: size += schema->typeLength[i]; break;
+            case DT_FLOAT: size += sizeof(float); break;
+            case DT_BOOL: size += sizeof(bool); break;
+            default: return RC_UNVALID_HANDLE;
+        }
+    }
+    return size;
 }
+/**
+ * @brief create a schema
+ * 
+ * @param numAttr, number of attributes
+ * @param attrNames, array of attribute names
+ * @param dataTypes, array of data types
+ * @param typeLength, array of type lengths
+ * @param keySize, number of key attributes
+ * @param keys, array of key attribute indices
+ * @return pointer to the schema
+ */
 Schema *createSchema (int numAttr, char **attrNames, DataType *dataTypes, int *typeLength, int keySize, int *keys)
 {
-    return -1;
-}
-RC freeSchema (Schema *schema)
-{
-    if (schema)
-    {
-        free(schema);
-        return RC_OK;
-    }
-    else
+    if(numAttr <= 0 || attrNames == NULL || dataTypes == NULL || typeLength == NULL || keySize < 0 || keys == NULL)
         return RC_UNVALID_HANDLE;
+    Schema *schema = (Schema *)malloc(sizeof(Schema));
+    if(schema == NULL)
+        return RC_MEMORY_ALLOC_FAILED;
+    schema->numAttr = numAttr;
+    schema->attrNames = attrNames;
+    schema->dataTypes = dataTypes;
+    schema->typeLength = typeLength;
+    schema->keySize = keySize;
+    schema->keyAttrs = keys;
+    return schema;
 }
-RC createRecord (Record **record, Schema *schema)
-{
+/**
+ * @brief free a schema
+ * 
+ * @param schema, pointer to the schema
+ * @return RC_OK
+ */
+RC freeSchema(Schema *schema) {
+    if (schema == NULL)
+        return RC_UNVALID_HANDLE;
+    // 释放动态分配的成员（假设attrNames等是动态分配的）
+    if(schema->attrNames != NULL)
+        free(schema->attrNames);
+    if(schema->dataTypes != NULL)
+        free(schema->dataTypes);
+    if(schema->typeLength != NULL)
+        free(schema->typeLength);
+    if(schema->keyAttrs != NULL)
+        free(schema->keyAttrs);
+    // 释放schema结构体
+    free(schema);
     return RC_OK;
 }
+/**
+ * @brief create a record
+ * 
+ * @param record, pointer to the record
+ * @param schema, pointer to the schema
+ * @return RC_OK
+ */
+RC createRecord (Record **record, Schema *schema)
+{
+    if(record == NULL || schema == NULL)
+        return RC_UNVALID_HANDLE;
+    
+    *record = (Record *)malloc(sizeof(Record));
+    if(*record == NULL)
+        return RC_MEMORY_ALLOC_FAILED;
+    (*record)->data = (char *)malloc(getRecordSize(schema));
+    if((*record)->data == NULL)
+    {
+        free(*record);
+        return RC_MEMORY_ALLOC_FAILED;
+    }
+
+    (*record)->id.page = -1;
+    (*record)->id.slot = -1;
+
+    return RC_OK;
+}
+/**
+ * @brief free a record
+ * 
+ * @param record, pointer to the record
+ * @return RC_OK
+ */
 RC freeRecord (Record *record)
 {
     if (record)
@@ -125,11 +445,96 @@ RC freeRecord (Record *record)
     else
         return RC_UNVALID_HANDLE;
 }
+/**
+ * @brief get attribute value (simple version)
+ * 
+ * @param record, pointer to the record
+ * @param schema, pointer to the schema
+ * @param attrNum, attribute number
+ * @param value, pointer to the value
+ * @return RC_OK
+ */
 RC getAttr (Record *record, Schema *schema, int attrNum, Value **value)
 {
+    if(record == NULL || schema == NULL || attrNum < 0 || attrNum >= schema->numAttr || value == NULL)
+        return RC_UNVALID_HANDLE;
+    
+    *value = (Value *)malloc(sizeof(Value));
+    if(*value == NULL)
+        return RC_MEMORY_ALLOC_FAILED;
+    (*value)->dt = schema->dataTypes[attrNum];
+    char *dataPtr = record->data;
+    int offset = 0;
+    // calculate all attribute offsets
+    for(int i = 0; i < attrNum; i++)
+    {
+        switch(schema->dataTypes[i])
+        {
+            case DT_INT: offset += sizeof(int); break;
+            case DT_STRING: offset += schema->typeLength[i]; break;
+            case DT_FLOAT: offset += sizeof(float); break;
+            case DT_BOOL: offset += sizeof(bool); break;
+            default: free(*value); return RC_INVALID_PARAMS;
+        }
+    }
+    // copy the attribute value
+    switch(schema->dataTypes[attrNum])
+    {
+        case DT_INT: (*value)->v.intV = *((int *)(dataPtr + offset)); break;
+        case DT_STRING: 
+            (*value)->v.stringV = (char *)malloc(schema->typeLength[attrNum]);
+            if (((*value)->v.stringV) == NULL)
+                {
+                    free(*value);
+                    return RC_MEMORY_ALLOC_FAILED;
+                }
+            memcpy((*value)->v.stringV, (char *)(dataPtr + offset), schema->typeLength[attrNum]); 
+            break; // 根据文档要求，记录中的字符串不包含结尾的"\0"~!
+        case DT_FLOAT: (*value)->v.floatV = *((float *)(dataPtr + offset)); break;
+        case DT_BOOL: (*value)->v.boolV = *((bool *)(dataPtr + offset)); break;
+        default: free(*value); return RC_INVALID_PARAMS;
+    }
     return RC_OK;
 }
+/**
+ * @brief set attribute value (simple version)
+ * 
+ * @param record, pointer to the record
+ * @param schema, pointer to the schema
+ * @param attrNum, attribute number
+ * @param value, pointer to the value
+ * @return RC_OK
+ */
 RC setAttr (Record *record, Schema *schema, int attrNum, Value *value)
 {
+    if(record == NULL || schema == NULL || attrNum < 0 || attrNum >= schema->numAttr || value == NULL)
+        return RC_UNVALID_HANDLE;
+
+    char *dataPtr = record->data;
+    int offset = 0;
+    // calculate all attribute offsets
+    for(int i = 0; i < attrNum; i++)
+    {
+        switch(schema->dataTypes[i])
+        {
+            case DT_INT: offset += sizeof(int); break;
+            case DT_STRING: offset += schema->typeLength[i]; break;
+            case DT_FLOAT: offset += sizeof(float); break;
+            case DT_BOOL: offset += sizeof(bool); break;
+            default: free(value); return RC_INVALID_PARAMS;
+        }
+    }
+    // set the attribute value
+    switch(schema->dataTypes[attrNum])
+    {
+        case DT_INT: *((int *)(dataPtr + offset)) = value->v.intV; break;
+        case DT_STRING: 
+            memcpy((char *)(dataPtr + offset), value->v.stringV, schema->typeLength[attrNum]); 
+            break; // 根据文档要求，记录中的字符串不包含结尾的"\0"~!
+        case DT_FLOAT: *((float *)(dataPtr + offset)) = value->v.floatV; break;
+        case DT_BOOL: *((bool *)(dataPtr + offset)) = value->v.boolV; break;
+        default: free(value); return RC_INVALID_PARAMS;
+    }
+
     return RC_OK;
 }
