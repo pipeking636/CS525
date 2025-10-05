@@ -145,7 +145,7 @@ RC openTable (RM_TableData *rel, char *name)
     }
     // 3. read table info from page 0
     BM_PageHandle ph;
-    ret = pinPage(&mgmt->bufferPool, 0, &ph);
+    ret = pinPage(&mgmt->bufferPool,&ph,0);
     if( ret != RC_OK)
     {
         free(rel->name);
@@ -402,10 +402,10 @@ int getRecordSize (Schema *schema)
 Schema *createSchema (int numAttr, char **attrNames, DataType *dataTypes, int *typeLength, int keySize, int *keys)
 {
     if(numAttr <= 0 || attrNames == NULL || dataTypes == NULL || typeLength == NULL || keySize < 0 || keys == NULL)
-        return RC_UNVALID_HANDLE;
+        return NULL;
     Schema *schema = (Schema *)malloc(sizeof(Schema));
     if(schema == NULL)
-        return RC_MEMORY_ALLOC_FAILED;
+        return NULL;
     schema->numAttr = numAttr;
     schema->attrNames = attrNames;
     schema->dataTypes = dataTypes;

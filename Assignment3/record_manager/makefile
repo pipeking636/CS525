@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = -g -Wall -DDEBUG   # 无需 -c，需要链接
 # LDFLAGS = -L../../assignment1/storage_manager/  # 指定静态库所在目录（assignment1 的路径）
 LDFLAGS = -L./
-LDLIBS = -lbuffer_mgr          # 指定链接的静态库（libbuffer_mgr.a，省略前缀 lib 和后缀 .a）
+LDLIBS = -lbuffer_mgr -lstorage_mgr         # 指定链接的静态库（libbuffer_mgr.a，省略前缀 lib 和后缀 .a）
 
 # 目标可执行文件
 TARGET1 = test_assign3_1
