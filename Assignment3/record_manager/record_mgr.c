@@ -79,7 +79,7 @@ RC createTable (char *name, Schema *schema)
         closePageFile(&fh);
         return RC_UNVALID_HANDLE;
     }
-    // initialize table info
+    // 3. initialize table info
     TableInfo tableInfo;
     strcpy(tableInfo.tableName, name); //table name keep normal string length and "\0" ending
     tableInfo.schema = *schema; // copy schema, please note dynamic memory in schema
@@ -87,9 +87,16 @@ RC createTable (char *name, Schema *schema)
     tableInfo.totalPages = 1; // at least one page for table info
     tableInfo.freePageListHead = -1; // no free page
     tableInfo.recordSize = recordSize; // record size is fixed
-    // write table info to page 0
+    // 4. write table info to page 0
     SM_PageHandle page = (SM_PageHandle)calloc(PAGE_SIZE, sizeof(char));
-    memcpy(page, &tableInfo, sizeof(TableInfo));
+    // 5. set page 0 header
+    PageHeader phHeader;
+    phHeader.freeSpaceOffset = PAGE_SIZE - sizeof(PageHeader); // free space start from page tail
+    phHeader.slotCount = 0; // no slot used yet
+    phHeader.nextFreePage = -1; // no next free page
+    phHeader.isTableInfoPage = true; // mark as table info page
+    memcpy(page, &phHeader, sizeof(PageHeader));
+    memcpy(page + sizeof(PageHeader), &tableInfo, sizeof(TableInfo));
     if (writeBlock(0, &fh, page) != RC_OK)
     {
         free(page);
@@ -173,15 +180,17 @@ RC closeTable (RM_TableData *rel)
     if(rel == NULL || rel->mgmtData == NULL)
         return RC_UNVALID_HANDLE;
     RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData; // cast mgmtData to RM_TableMgmt
-    // close buffer pool
+    // 1. close buffer pool
     ret = shutdownBufferPool(&mgmt->bufferPool);
     if( ret != RC_OK)
     {
         /*maybe need more error handling*/
         return ret;
     }
-
-    // release table info
+    ret = closePageFile(&mgmt->fileHandle);
+    if( ret != RC_OK) return ret;
+    
+    // 2. release table info
     free(rel->name);
     free(rel->schema);
     free(rel->mgmtData);
