@@ -494,7 +494,7 @@ RC unpinPage(BM_BufferPool *const bm, BM_PageHandle *const page) {
             break;
         }
         default:
-            DEBUG_PRINT("Can not support %d stratage\n",bm->strategy);
+            DEBUG_PRINT("Can not support %d stratagy\n",bm->strategy);
     }
     return RC_OK;
 }

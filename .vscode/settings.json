@@ -5,6 +5,10 @@
         "record_mgr.h": "c",
         "storage_mgr.h": "c",
         "tables.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "cstdlib": "c",
+        "cmath": "c",
+        "new": "c",
+        "typeinfo": "c"
     }
 }

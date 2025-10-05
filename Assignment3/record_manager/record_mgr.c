@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 
-// 页头元数据（每个数据页的页头）
+// 页头元数据（每个数据页的页头）, 固定空间的结构体。
 typedef struct PageHeader {
     int freeSpaceOffset;       // 空闲空间起始偏移量（从页尾向页头增长）
     int slotCount;             // 已使用的槽位数量
@@ -22,7 +22,7 @@ typedef struct TableInfo {
     int numTuples;             // 记录总数
     int totalPages;            // 表的总页数
     int freePageListHead;      // 空闲页链表头（-1表示无空闲页）
-    int recordSize;            // 每条记录的固定大小（由schema计算）
+    int recordSize;            // 每条记录的固定大小（从schema计算）
 } TableInfo;
 
 // RM_TableData的mgmtData实际类型
@@ -33,6 +33,30 @@ typedef struct RM_TableMgmt {
     int numReadIO;             // 统计用（可选，参考缓冲管理器）
     int numWriteIO;            // 统计用（可选）
 } RM_TableMgmt;
+
+// debug functions
+// show schema
+static void showSchema(Schema *schema)
+{
+    if(schema == NULL)
+        return;
+    printf("Schema: %d attributes\n", schema->numAttr);
+    for(int i = 0; i < schema->numAttr; i++)
+    {
+        printf("  %s: %d", schema->attrNames[i], schema->typeLength[i]);
+        switch(schema->dataTypes[i])
+        {
+            case DT_INT: printf(" (int)"); break;
+            case DT_STRING: printf(" (string)"); break;
+            case DT_FLOAT: printf(" (float)"); break;
+            case DT_BOOL: printf(" (bool)"); break;
+            default: printf(" (unknown)"); break;
+        }
+        if(i < schema->keySize)
+            printf(" (key)");
+        printf("\n");
+    }
+}
 
 // table and manager
 /**
@@ -388,6 +412,7 @@ int getRecordSize (Schema *schema)
     }
     return size;
 }
+
 /**
  * @brief create a schema
  * 
@@ -412,6 +437,8 @@ Schema *createSchema (int numAttr, char **attrNames, DataType *dataTypes, int *t
     schema->typeLength = typeLength;
     schema->keySize = keySize;
     schema->keyAttrs = keys;
+
+    showSchema(schema);
     return schema;
 }
 /**
