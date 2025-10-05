@@ -30,6 +30,7 @@ typedef int RC; // define a new type for error code
 #define RC_RM_NO_MORE_TUPLES 203
 #define RC_RM_NO_PRINT_FOR_DATATYPE 204
 #define RC_RM_UNKOWN_DATATYPE 205
+#define RC_RM_INVALID_RECORD_SIZE 206
 
 #define RC_IM_KEY_NOT_FOUND 300
 #define RC_IM_KEY_ALREADY_EXISTS 301

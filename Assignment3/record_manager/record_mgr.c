@@ -29,6 +29,7 @@ typedef struct TableInfo {
 typedef struct RM_TableMgmt {
     BM_BufferPool bufferPool;  // 该表对应的缓冲池
     TableInfo tableInfo;       // 从表信息页读取的元数据
+    SM_FileHandle fileHandle;  // 该表对应的文件句柄
     int numReadIO;             // 统计用（可选，参考缓冲管理器）
     int numWriteIO;            // 统计用（可选）
 } RM_TableMgmt;
@@ -118,6 +119,14 @@ RC openTable (RM_TableData *rel, char *name)
     rel->schema = (Schema *)malloc(sizeof(Schema)); // copy schema, please note dynamic memory in schema
     rel->mgmtData =(RM_TableMgmt *)malloc(sizeof(RM_TableMgmt)); // copy mgmtData, please note dynamic memory in mgmtData
     RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData; // cast mgmtData to RM_TableMgmt
+    ret=openPageFile(name, &mgmt->fileHandle);
+    if(ret != RC_OK)
+    {
+        free(rel->name);
+        free(rel->schema);
+        free(rel->mgmtData);
+        return ret;        
+    }
     // 2. initialize buffer pool (use FIFO policy)
     ret = initBufferPool(&mgmt->bufferPool, name, 10, RS_FIFO, NULL);
     if ( ret != RC_OK)
@@ -221,54 +230,71 @@ RC insertRecord (RM_TableData *rel, Record *record)
 
     if(rel == NULL || rel->mgmtData == NULL || record == NULL)
         return RC_UNVALID_HANDLE;
+
     // get record size
     RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData; // cast mgmtData to RM_TableMgmt
-    int recordSize = mgmt->tableInfo.recordSize;
-    // 1. pin first page (page 1)
+    int recordSize = getRecordSize(rel->schema);
+    if(recordSize<=0) return RC_RM_INVALID_RECORD_SIZE;
+
+    // 1. find valid page(from free list first)
+    int targetPageNum =-1;
+    PageHeader phHeader;
     BM_PageHandle ph;
-    ret = pinPage(&mgmt->bufferPool, &ph, 1); // 是固定的吗？
-    if( ret != RC_OK)
+
+    // traverse free list to find enough free space
+    int currPage = mgmt->tableInfo.freePageListHead;
+    while(currPage != -1)
     {
-        // pin page 1 failed, create new page
-        SM_FileHandle *fh = ((BM_MgmtData *)(mgmt->bufferPool.mgmtData))->fileHandle; //这句话有错误，BM_MgmtData结构体是私有结构体，不应该在这里被显式使用
-        ret = appendEmptyBlock(fh);
+        // pin current free page, read page header
+        ret = pinPage(&mgmt->bufferPool, &ph, currPage);
+        if( ret != RC_OK) 
+        {
+            currPage = -1;
+            break;
+        }
+        // parse page header
+        memcpy(&phHeader, ph.data, sizeof(PageHeader));
+        // check free space (page size-header size-slot size-record size)
+        int freeSpace = phHeader.freeSpaceOffset - sizeof(PageHeader) - phHeader.slotCount * recordSize;
+        if (freeSpace >= recordSize) {
+            targetPageNum = currPage;
+            break;  // find free page with enough space
+        } else {
+            // this page no enough space, unpin and move to next free page
+            unpinPage(&mgmt->bufferPool, &ph);
+            currPage = phHeader.nextFreePage;
+        }
+    }
+    // 2. if can not find free page, create new page
+    if(targetPageNum == -1)
+    {
+        ret = appendEmptyBlock(&mgmt->fileHandle);
         if( ret != RC_OK) return ret;
-        // pin new page
-        ret = pinPage(&mgmt->bufferPool, &ph, 1); // 是固定的吗？
+        targetPageNum = mgmt->fileHandle.totalNumPages - 1; // new page number
+        // pin new page, and initialize page header
+        ret = pinPage(&mgmt->bufferPool, &ph, targetPageNum);
         if( ret != RC_OK) return ret;
+        // initialize page header
+        phHeader.freeSpaceOffset = PAGE_SIZE; // free space offset is end of page
+        phHeader.slotCount = 0;
+        phHeader.nextFreePage = mgmt->tableInfo.freePageListHead; // link to free list
+        mgmt->tableInfo.freePageListHead = targetPageNum; // update free list head
+        memcpy(ph.data, &phHeader, sizeof(PageHeader));
+        markDirty(&mgmt->bufferPool, &ph);// mark page as dirty
     }
+    // 3. insert record to page
+    // calculate record offset(page header size + slot count * record size)
+    int recordOffset = sizeof(PageHeader) + phHeader.slotCount * recordSize;
+    // copy record data to page
+    memcpy(ph.data + recordOffset, record->data, recordSize);
+    // update page header
+    phHeader.slotCount++;
+    phHeader.freeSpaceOffset -= recordSize; // update free space offset
+    memcpy(ph.data, &phHeader, sizeof(PageHeader));
+    // mark page as dirty
+    markDirty(&mgmt->bufferPool, &ph);// mark page as dirty
+    unpinPage(&mgmt->bufferPool, &ph); // unpin page
 
-    // 2. calculate data offset(simple way, append at the end of the page header)
-    PageHeader *pageHeader = (PageHeader *)ph.data;
-    if(pageHeader->isTableInfoPage)
-    {
-        pageHeader->isTableInfoPage = false; 
-        pageHeader->freeSpaceOffset = sizeof(PageHeader); // after header
-        pageHeader->slotCount = 0;
-        pageHeader->nextFreePage = -1;
-    }
-
-    int freeSpace = PAGE_SIZE - pageHeader->freeSpaceOffset;
-    if (freeSpace < recordSize)
-    {
-        unpinPage(&mgmt->bufferPool, &ph);
-        return RC_PAGE_NOT_FOUND;
-    }
-
-    // 3. copy record to data page
-    memcpy(ph.data + pageHeader->freeSpaceOffset, record->data, recordSize);
-    // 4. set RID
-    record->id.page = 1; // 是固定的吗？
-    record->id.slot = pageHeader->slotCount; 
-    // 5. update page header
-    pageHeader->freeSpaceOffset += recordSize;
-    pageHeader->slotCount++;
-    mgmt->tableInfo.numTuples++;
-    markDirty(&mgmt->bufferPool, &ph);
-    // 6. unpin page 1
-    ret = unpinPage(&mgmt->bufferPool, &ph);
-    if( ret != RC_OK) return ret;
-    
     return RC_OK;
 }
 /**
