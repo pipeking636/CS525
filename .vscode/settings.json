@@ -12,6 +12,10 @@
         "typeinfo": "c",
         "stdio.h": "c",
         "compare": "c",
-        "cstdio": "c"
+        "cstdio": "c",
+        "concepts": "c",
+        "cstdarg": "c",
+        "limits": "c",
+        "cstdint": "c"
     }
 }

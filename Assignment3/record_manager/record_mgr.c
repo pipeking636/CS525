@@ -293,12 +293,19 @@ RC openTable (RM_TableData *rel, char *name)
     }
 
     // 5. 初始化缓冲池
-    initBufferPool(&mgmt->bufferPool, name, 10, RS_FIFO, NULL);
-    mgmt->bufferPool.mgmtData = mgmt;
+    rc = initBufferPool(&mgmt->bufferPool, name, DEFAULT_BUFFER_POOL_SIZE, RS_FIFO, NULL);
+    if (rc != RC_OK) {
+        freeSchema(mgmt->schema);
+        closePageFile(&mgmt->fileHandle);
+        free(mgmt);
+        return rc;
+    }
+
+    // 6. 设置其他字段
     mgmt->numReadIO = 0;
     mgmt->numWriteIO = 0;
 
-    // 6. 设置rel
+    // 7. 设置rel
     rel->name = name;
     rel->schema = mgmt->schema;
     rel->mgmtData = mgmt;
@@ -313,28 +320,38 @@ RC openTable (RM_TableData *rel, char *name)
  */
 RC closeTable(RM_TableData *rel) {
     if (rel == NULL || rel->mgmtData == NULL) return RC_INVALID_PARAMS;
+
+    // 先保存需要的值，因为mgmt可能在shutdownBufferPool中被释放
     RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData;
-    RC rc = RC_OK;
+    Schema *schemaToFree = mgmt->schema;
+
+    // 保存文件句柄指针用于关闭
+    SM_FileHandle *fileHandle = &mgmt->fileHandle;
 
     // 1. 关闭缓冲池（此时frame 0已非脏页，无需刷写）
-    rc = shutdownBufferPool(&mgmt->bufferPool);
+    RC rc = shutdownBufferPool(&mgmt->bufferPool);
     if (rc != RC_OK) {
-        fprintf(stderr, "Warning: shutdown buffer pool failed\n");
+        printf("Warning: shutdown buffer pool failed\n");
     }
 
     // 2. 关闭文件句柄
     rc = closePageFile(&mgmt->fileHandle);
     if (rc != RC_OK) {
-        fprintf(stderr, "Warning: close page file failed\n");
+        printf("Warning: close page file failed\n");
     }
 
     // 3. 释放Schema和管理结构体
     rc = freeSchema(mgmt->schema);
     if (rc != RC_OK) {
-        fprintf(stderr, "Warning: free schema failed\n");
+        printf("Warning: free schema failed\n");
     }
+
+    // 4. 释放管理结构体
     free(mgmt);
+
+    // 5. 清空rel中的指针
     rel->mgmtData = NULL;
+    rel->schema = NULL;
 
     return RC_OK;
 }
