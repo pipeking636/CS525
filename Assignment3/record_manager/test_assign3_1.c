@@ -81,10 +81,10 @@ main (void)
 {
 	//testName = "";
 	//my test
-	testTableLifecycle(); // 第一阶段测试
+	// testTableLifecycle(); // 第一阶段测试
 
-	// // offical test
-	// testInsertManyRecords();
+	// offical test
+	testInsertManyRecords();
 	// testRecords();
 	// testCreateTableAndInsert();
 	// testUpdateTable();
@@ -95,10 +95,10 @@ main (void)
 	return 0;
 }
 
-//===============my test methods  start================
-// 测试表的创建、打开、关闭、销毁生命周期
+//====================================my test methods  start============================
+// 第一阶段，测试表的创建、打开、关闭、销毁生命周期；记录的创建、删除；记录中属性的设置和获取。
 static void testTableLifecycle(void) {
-    testName = "test table create/open/close/destroy lifecycle";
+    testName = "test table create/open/close/destroy lifecycle and record operations";
     RM_TableData table;  // 直接声明RM_TableData，无需malloc
     Schema *schema;
     char *attrNames[] = {"id", "name", "age"};  // 属性名数组
@@ -106,7 +106,11 @@ static void testTableLifecycle(void) {
     int lengths[] = {0, 4, 0};  // "name"长度4
     int keyAttrs[] = {0};  // 主键为第0个属性（id）
     char *tableNameFromAPI = NULL;  // 存储从接口获取的表名
-
+    
+    // 新增：用于记录操作测试的变量
+    Record *record = NULL;
+    Value *value = NULL;
+    
     // 1. 初始化记录管理器
     TEST_CHECK(initRecordManager(NULL));
 
@@ -157,6 +161,52 @@ static void testTableLifecycle(void) {
     );
     free(tableNameFromAPI);  // 释放接口返回的表名内存
 
+    // 新增：测试createRecord, setAttr, getAttr 和 freeRecord 函数
+    printf("\n=== 开始测试记录操作函数 ===\n");
+    
+    // 测试createRecord
+    TEST_CHECK(createRecord(&record, schema));
+    ASSERT_TRUE(record != NULL, "record created successfully");
+    ASSERT_TRUE(record->data != NULL, "record data allocated successfully");
+    ASSERT_EQUALS_INT(-1, record->id.page, "record RID page initialized to -1");
+    ASSERT_EQUALS_INT(-1, record->id.slot, "record RID slot initialized to -1");
+    
+    // 测试setAttr
+    MAKE_VALUE(value, DT_INT, 100);
+    TEST_CHECK(setAttr(record, schema, 0, value));
+    freeVal(value);
+    
+    MAKE_STRING_VALUE(value, "John");
+    TEST_CHECK(setAttr(record, schema, 1, value));
+    freeVal(value);
+    
+    MAKE_VALUE(value, DT_INT, 30);
+    TEST_CHECK(setAttr(record, schema, 2, value));
+    freeVal(value);
+    
+    // 测试getAttr并验证值是否正确设置
+    TEST_CHECK(getAttr(record, schema, 0, &value));
+    ASSERT_TRUE(value != NULL, "value retrieved successfully");
+    ASSERT_EQUALS_INT(DT_INT, value->dt, "attribute 0 has correct data type");
+    ASSERT_EQUALS_INT(100, value->v.intV, "attribute 0 value is correct");
+    freeVal(value);
+    
+    TEST_CHECK(getAttr(record, schema, 1, &value));
+    ASSERT_TRUE(value != NULL, "value retrieved successfully");
+    ASSERT_EQUALS_INT(DT_STRING, value->dt, "attribute 1 has correct data type");
+    ASSERT_EQUALS_STRING("John", value->v.stringV, "attribute 1 value is correct");
+    freeVal(value);
+    
+    TEST_CHECK(getAttr(record, schema, 2, &value));
+    ASSERT_TRUE(value != NULL, "value retrieved successfully");
+    ASSERT_EQUALS_INT(DT_INT, value->dt, "attribute 2 has correct data type");
+    ASSERT_EQUALS_INT(30, value->v.intV, "attribute 2 value is correct");
+    freeVal(value);
+    
+    // 测试freeRecord
+    TEST_CHECK(freeRecord(record));
+    printf("=== 记录操作函数测试完成 ===\n");
+    
     // 5. 关闭表
     TEST_CHECK(closeTable(&table));
 
@@ -177,8 +227,8 @@ static void testTableLifecycle(void) {
     TEST_CHECK(freeSchema(schema));
     TEST_CHECK(shutdownRecordManager());
     TEST_DONE();
-}
-//==================my test methods end===================
+};
+//====================================my test methods end============================
 
 // ************************************************************ 
 void

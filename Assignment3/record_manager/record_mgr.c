@@ -323,10 +323,6 @@ RC closeTable(RM_TableData *rel) {
 
     // 先保存需要的值，因为mgmt可能在shutdownBufferPool中被释放
     RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData;
-    Schema *schemaToFree = mgmt->schema;
-
-    // 保存文件句柄指针用于关闭
-    SM_FileHandle *fileHandle = &mgmt->fileHandle;
 
     // 1. 关闭缓冲池（此时frame 0已非脏页，无需刷写）
     RC rc = shutdownBufferPool(&mgmt->bufferPool);
@@ -363,28 +359,45 @@ RC closeTable(RM_TableData *rel) {
  */
 RC deleteTable (char *name)
 {
+    if (name == NULL) return RC_INVALID_PARAMS;
     return destroyPageFile(name);
 }
 
-// 1. 获取表总页数
+/**
+ * @brief get total number of pages in a table
+ * 
+ * @param rel, pointer to the table data
+ * @return total number of pages
+ */
 int getTableTotalPages(RM_TableData *rel) {
     if (rel == NULL || rel->mgmtData == NULL) return -1;
     RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData;
     return mgmt->tableInfo.totalPages;
 }
 
-// 2. 获取记录大小
+/**
+ * @brief get record size in a table
+ * 
+ * @param rel, pointer to the table data
+ * @return record size
+ */
 int getTableRecordSize(RM_TableData *rel) {
     if (rel == NULL || rel->mgmtData == NULL) return -1;
     RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData;
     return mgmt->tableInfo.recordSize;
 }
 
-// 3. 获取表名（返回拷贝，需外部释放）
+/**
+ * @brief get table name in a table
+ * 
+ * @param rel, pointer to the table data
+ * @return table name, a copy of the table name need release after use
+ */
 char* getTableName(RM_TableData *rel) {
     if (rel == NULL || rel->mgmtData == NULL) return NULL;
     RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData;
-    char *name = (char *)malloc(strlen(mgmt->tableInfo.tableName) + 1);
+    char *name = (char *)malloc(strlen(mgmt->tableInfo.tableName) + 1); // please free after use
+    if (name == NULL) return NULL;
     strcpy(name, mgmt->tableInfo.tableName);
     return name;
 }
@@ -394,7 +407,6 @@ char* getTableName(RM_TableData *rel) {
  * @param rel, pointer to the table data
  * @return number of tuples
  */
-// 暂时实现空函数（避免未定义错误）
 int getNumTuples(RM_TableData *rel) {
     if (rel == NULL || rel->mgmtData == NULL) return -1;
     RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData;
@@ -451,47 +463,155 @@ RC closeScan (RM_ScanHandle *scan)
 /**
  * @brief create a record
  * 
- * @param record, pointer to the record
- * @param schema, pointer to the schema
+ * @param record, output, pointer to the record
+ * @param schema, input, pointer to the schema
  * @return RC_OK
  */
 RC createRecord (Record **record, Schema *schema)
 {
+    if (record == NULL || schema == NULL) return RC_INVALID_PARAMS;
+    // 创建一个记录的头
+    *record = (Record *)malloc(sizeof(Record));
+    if (*record == NULL) return RC_OUT_OF_MEMORY;
+
+    // 分配记录数据内存（大小由schema决定）
+    int recSize = getRecordSize(schema);
+    (*record)->data = malloc(recSize);
+    if ((*record)->data == NULL) {
+        free(*record);
+        return RC_OUT_OF_MEMORY;
+    }
+    // 初始化RID（默认无效）
+    (*record)->id.page = -1;
+    (*record)->id.slot = -1;
     return RC_OK;
 }
 /**
  * @brief free a record
  * 
- * @param record, pointer to the record
+ * @param record, input, pointer to the record
  * @return RC_OK
  */
 RC freeRecord (Record *record)
 {
+    if (record == NULL) return RC_OK;
+    
+    free(record->data); // free record data
+    free(record); // free record header
+
+    return RC_OK;
+}
+
+/**
+ * @brief get attribute offset in a record
+ * 
+ * @param schema, input, pointer to the schema
+ * @param attrNum, input, attribute number
+ * @param result, output, pointer to the offset
+ * @return RC_OK
+ */
+RC attrOffset(Schema *schema, int attrNum, int *result) {
+    if (schema == NULL || result == NULL || attrNum < 0 || attrNum >= schema->numAttr)
+        return RC_INVALID_PARAMS;
+    
+    int offset = 0;
+    for (int i = 0; i < attrNum; i++) {
+        switch (schema->dataTypes[i]) {
+            case DT_INT: offset += sizeof(int); break;
+            case DT_FLOAT: offset += sizeof(float); break;
+            case DT_STRING: offset += schema->typeLength[i]; break;
+            case DT_BOOL: offset += sizeof(bool); break;
+            default: return RC_RM_UNKNOWN_DATATYPE;
+        }
+    }
+    *result = offset;
     return RC_OK;
 }
 /**
  * @brief get attribute value (simple version)
  * 
- * @param record, pointer to the record
- * @param schema, pointer to the schema
- * @param attrNum, attribute number
- * @param value, pointer to the value
+ * @param record, input, pointer to the record
+ * @param schema, input, pointer to the schema
+ * @param attrNum, input, attribute number
+ * @param value, output, pointer to the value
  * @return RC_OK
  */
 RC getAttr (Record *record, Schema *schema, int attrNum, Value **value)
 {
+    if (record == NULL || schema == NULL || attrNum < 0 || attrNum >= schema->numAttr || value == NULL)
+        return RC_INVALID_PARAMS;
+
+    *value = (Value *)malloc(sizeof(Value));
+    if (*value == NULL) return RC_OUT_OF_MEMORY;
+
+    int offset;
+    attrOffset(schema, attrNum, &offset); // 使用现有偏移量计算函数
+    char *data = record->data + offset;
+
+    // 根据数据类型解析值
+    switch (schema->dataTypes[attrNum]) {
+        case DT_INT:
+            (*value)->dt = DT_INT;
+            memcpy(&(*value)->v.intV, data, sizeof(int));
+            break;
+        case DT_FLOAT:
+            (*value)->dt = DT_FLOAT;
+            memcpy(&(*value)->v.floatV, data, sizeof(float));
+            break;
+        case DT_STRING:
+            (*value)->dt = DT_STRING;
+            int len = schema->typeLength[attrNum];
+            (*value)->v.stringV = malloc(len + 1);
+            strncpy((*value)->v.stringV, data, len);
+            (*value)->v.stringV[len] = '\0';
+            break;
+        case DT_BOOL:
+            (*value)->dt = DT_BOOL;
+            memcpy(&(*value)->v.boolV, data, sizeof(bool));
+            break;
+        default:
+            free(*value);
+            return RC_RM_UNKNOWN_DATATYPE;
+    }
     return RC_OK;
 }
 /**
  * @brief set attribute value (simple version)
  * 
- * @param record, pointer to the record
- * @param schema, pointer to the schema
- * @param attrNum, attribute number
- * @param value, pointer to the value
+ * @param record, input, pointer to the record
+ * @param schema, input, pointer to the schema
+ * @param attrNum, input, attribute number
+ * @param value, input, pointer to the value
  * @return RC_OK
  */
 RC setAttr (Record *record, Schema *schema, int attrNum, Value *value)
 {
+if (record == NULL || schema == NULL || value == NULL || attrNum < 0 || attrNum >= schema->numAttr)
+        return RC_INVALID_PARAMS;
+    if (schema->dataTypes[attrNum] != value->dt) return RC_INVALID_PARAMS;
+
+    int offset;
+    attrOffset(schema, attrNum, &offset); // 使用现有偏移量计算函数
+    char *data = record->data + offset;
+
+    // 根据数据类型写入值
+    switch (value->dt) {
+        case DT_INT:
+            memcpy(data, &value->v.intV, sizeof(int));
+            break;
+        case DT_FLOAT:
+            memcpy(data, &value->v.floatV, sizeof(float));
+            break;
+        case DT_STRING:
+            int len = schema->typeLength[attrNum];
+            strncpy(data, value->v.stringV, len); // 截断或补全到指定长度
+            break;
+        case DT_BOOL:
+            memcpy(data, &value->v.boolV, sizeof(bool));
+            break;
+        default:
+            return RC_RM_UNKNOWN_DATATYPE;
+    }
+
     return RC_OK;
 }
