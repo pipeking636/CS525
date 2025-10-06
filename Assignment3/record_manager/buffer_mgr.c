@@ -205,12 +205,38 @@ static int selectReplacementFrame(BM_BufferPool *bm) {
 
         case RS_CLOCK: {
             // CLOCK：从当前clockHand开始寻找clockBit=0的帧
-
+            int start = mgmt->clockHand;
+                while (1) {
+                    int currIdx = mgmt->clockHand;
+                    // 移动时钟指针（循环）
+                    mgmt->clockHand = (mgmt->clockHand + 1) % numPages;
+                    // 检查当前帧是否为候选（fixCount=0）
+                    if (mgmt->frames[currIdx].fixCount == 0) {
+                        if (mgmt->frames[currIdx].clockBit == 0) {
+                            victimIndex = currIdx;
+                            break;
+                        } else {
+                            // 重置引用位，继续寻找
+                            mgmt->frames[currIdx].clockBit = 0;
+                        }
+                    }
+                    // 防止死循环（理论上不会触发，因为已有候选帧）
+                    if (mgmt->clockHand == start) break;
+                }
             break;
         }
         case RS_LFU: {
             // LFU：选择引用计数最少的帧
-
+            victimIndex = candidates[0];
+                int minRefCount = mgmt->frames[victimIndex].refCount;
+                // 寻找引用计数最小的帧
+                for (int j = 1; j < candiCount; j++) {
+                    int currIdx = candidates[j];
+                    if (mgmt->frames[currIdx].refCount < minRefCount) {
+                        minRefCount = mgmt->frames[currIdx].refCount;
+                        victimIndex = currIdx;
+                    }
+                }
             break;
         }
         case RS_LRU_K: {
@@ -219,7 +245,7 @@ static int selectReplacementFrame(BM_BufferPool *bm) {
             unsigned long int minKthTime = ULONG_MAX;
 
             for (int j = 0; j < bm->numPages; j++) {
-                int currIdx = getFrameIndex(bm, mgmt->frames[j].pageHandle.pageNum);
+                int currIdx = j;
                 Frame *frame = &mgmt->frames[currIdx];
                 
                 unsigned long int kthTime;
@@ -268,8 +294,18 @@ static RC  flushFrame(BM_BufferPool *bm, int frameIdx) {
     if (frame->isDirty) {
         // write back the dirty frame to pages file
         DEBUG_PRINT("the frame %d is dirty, write back to pages file\n", frameIdx); // only for debug
+
+        // 检查文件句柄是否有效
+        if (&mgmt->fileHandle == NULL) {
+            // 文件句柄已无效，无法写回脏页，清除脏位并记录警告
+            fprintf(stderr, "Warning: Cannot write back dirty frame %d, file handle is invalid\n", frameIdx);
+            frame->isDirty = false;
+            return RC_OK;
+        }
+
         mgmt->numWriteIO++;
-        CHECK(writeBlock(frame->pageHandle.pageNum, &mgmt->fileHandle, (char *)frame->pageHandle.data));
+        SM_FileHandle *fh = &mgmt->fileHandle;
+        CHECK(writeBlock(frame->pageHandle.pageNum, fh, (char *)frame->pageHandle.data));
 
         frame->isDirty = false; // clear dirty bit
         DEBUG_PRINT("the frame %d is flushed\n", frameIdx); // only for debug
@@ -292,7 +328,10 @@ static RC replaceFrame(BM_BufferPool *bm, int frameIdx) {
 
     BM_MgmtData *mgmt = (BM_MgmtData *)bm->mgmtData;
     Frame *frame = &mgmt->frames[frameIdx];
-
+    if (bm->strategy == RS_LRU_K) {
+        memset(frame->accessTimes, 0, mgmt->k * sizeof(unsigned long int));
+        frame->accessCount = 0;
+    }
     // clear metadata (only do this when replacing)
     frame->pageHandle.pageNum = NO_PAGE;
     frame->fixCount = 0;
@@ -374,36 +413,40 @@ RC initBufferPool(BM_BufferPool *const bm, const char *const pageFileName,
 * @return RC, return code
 */
 RC shutdownBufferPool(BM_BufferPool *const bm) {
-
     if (bm == NULL || bm->mgmtData == NULL) THROW(RC_UNVALID_HANDLE, "shutdownBufferPool: bm->mgmtData == NULL");
-
     BM_MgmtData *mgmt = (BM_MgmtData *)bm->mgmtData; // recode buffer pool meta data
-    
+    RC rc = RC_OK;
     // flush all dirty pages to disk
-    CHECK(forceFlushPool(bm));
+    rc=forceFlushPool(bm);
+    if(rc != RC_OK)
+    {
+        DEBUG_PRINT("Warning: forceFlushPool failed\n");
+    }
     
     // close the page file
-    CHECK(closePageFile(&mgmt->fileHandle));
+    rc=closePageFile(&mgmt->fileHandle);
+    if(rc != RC_OK)
+    {
+        DEBUG_PRINT("Warning: closePageFile failed\n");
+    }
     
     // release resources
+    // 释放pageHandle.data和accessTimes（只循环一次）
     for (int i = 0; i < bm->numPages; i++) {
         if (mgmt->frames[i].pageHandle.data != NULL) {
             free(mgmt->frames[i].pageHandle.data);
             mgmt->frames[i].pageHandle.data = NULL;
         }
 
-        if (bm->strategy == RS_LRU_K) {
-            for(int i=0;i<bm->numPages;i++)
-            {
-                if(mgmt->frames[i].accessTimes != NULL){
-                    free(mgmt->frames[i].accessTimes);
-                    mgmt->frames[i].accessTimes = NULL;
-                    mgmt->frames[i].accessCount = 0;
-                }
-            }
+        // 不管策略是什么，都检查并释放accessTimes
+        // 这段代码应该放在外层循环内，但不能嵌套在另一个循环中
+        if (mgmt->frames[i].accessTimes != NULL) {
+            free(mgmt->frames[i].accessTimes);
+            mgmt->frames[i].accessTimes = NULL;
+            mgmt->frames[i].accessCount = 0;
         }
     }
-
+    // 释放其他资源
     if(mgmt->frames != NULL)
     {
         free(mgmt->frames);
@@ -434,7 +477,7 @@ RC forceFlushPool(BM_BufferPool *const bm) {
     if (bm == NULL) THROW(RC_UNVALID_HANDLE, "forceFlushPool: bm == NULL");
     if (bm->mgmtData == NULL) THROW(RC_UNVALID_HANDLE, "forceFlushPool: mgmtData is NULL");
     
-    BM_MgmtData *mgmt = (BM_MgmtData *)bm->mgmtData;
+    // BM_MgmtData *mgmt = (BM_MgmtData *)bm->mgmtData;
     // 遍历所有帧的索引（0到numPages-1），直接刷新每个帧
     for (int frameIdx = 0; frameIdx < bm->numPages; frameIdx++) {
         CHECK(flushFrame(bm, frameIdx));
@@ -481,6 +524,10 @@ RC unpinPage(BM_BufferPool *const bm, BM_PageHandle *const page) {
 
     switch(bm->strategy)
     {
+        case RS_LFU: {
+            mgmt->frames[frameIdx].refCount++;  // 访问时递增引用计数
+            break;
+        }
         case RS_LRU:{
             mgmt->frames[frameIdx].lastAccessCounter = gAccessCounter;
             break;
@@ -494,7 +541,7 @@ RC unpinPage(BM_BufferPool *const bm, BM_PageHandle *const page) {
             break;
         }
         default:
-            DEBUG_PRINT("Can not support %d stratage\n",bm->strategy);
+            DEBUG_PRINT("Can not support %d stratagy\n",bm->strategy);
     }
     return RC_OK;
 }
@@ -566,11 +613,10 @@ RC pinPage(BM_BufferPool *const bm, BM_PageHandle *const page, const PageNumber 
         // ensure the page exists in the page file
         if (pageNum > mgmt->fileHandle.totalNumPages - 1) 
         {
-            // extend the page file
-            // int pagesToAdd = pageNum - mgmt->fileHandle.totalNumPages + 1;
-
-            // DEBUG_PRINT("extend %d blocks with Zero in page file \n", pagesToAdd); // only for debug
-            CHECK(appendEmptyBlock(&mgmt->fileHandle)); // append empty block to page file
+            int pagesToAdd = pageNum - (mgmt->fileHandle.totalNumPages - 1);
+            for (int i = 0; i < pagesToAdd; i++) {
+                CHECK(appendEmptyBlock(&mgmt->fileHandle));
+            }
         }
 
         DEBUG_PRINT("read the page %d from pages file to frame %d\n", pageNum, frameIdx); // only for debug

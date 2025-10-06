@@ -24,6 +24,8 @@ typedef int RC; // define a new type for error code
 #define RC_NO_FREE_FRAME (-5)
 
 #define RC_FILE_ALREADY_EXISTS 9
+#define RC_OUT_OF_MEMORY 100       // 内存不足
+
 #define RC_RM_COMPARE_VALUE_OF_DIFFERENT_DATATYPE 200
 #define RC_RM_EXPR_RESULT_IS_NOT_BOOLEAN 201
 #define RC_RM_BOOLEAN_EXPR_ARG_IS_NOT_BOOLEAN 202
@@ -31,6 +33,9 @@ typedef int RC; // define a new type for error code
 #define RC_RM_NO_PRINT_FOR_DATATYPE 204
 #define RC_RM_UNKOWN_DATATYPE 205
 #define RC_RM_INVALID_RECORD_SIZE 206
+#define RC_RM_SCHEMA_TOO_LARGE 207 // Schema太大，超过页大小
+#define RC_RM_TOO_MANY_ATTRS 208 // 超过最大属性数
+#define RC_RM_INVALID_ARGUMENT 209    // 无效参数
 
 #define RC_IM_KEY_NOT_FOUND 300
 #define RC_IM_KEY_ALREADY_EXISTS 301

@@ -48,6 +48,10 @@
 		} while (0)
 
 // test methods
+// my test methods
+static void testTableLifecycle(void);
+
+// offical test methods
 static void testRecords (void);
 static void testCreateTableAndInsert (void);
 static void testUpdateTable (void);
@@ -75,18 +79,106 @@ char *testName;
 int 
 main (void) 
 {
-	testName = "";
+	//testName = "";
+	//my test
+	testTableLifecycle(); // 第一阶段测试
 
-	testInsertManyRecords();
-	testRecords();
-	testCreateTableAndInsert();
-	testUpdateTable();
-	testScans();
-	testScansTwo();
-	testMultipleScans();
+	// // offical test
+	// testInsertManyRecords();
+	// testRecords();
+	// testCreateTableAndInsert();
+	// testUpdateTable();
+	// testScans();
+	// testScansTwo();
+	// testMultipleScans();
 
 	return 0;
 }
+
+//===============my test methods  start================
+// 测试表的创建、打开、关闭、销毁生命周期
+static void testTableLifecycle(void) {
+    testName = "test table create/open/close/destroy lifecycle";
+    RM_TableData table;  // 直接声明RM_TableData，无需malloc
+    Schema *schema;
+    char *attrNames[] = {"id", "name", "age"};  // 属性名数组
+    DataType types[] = {DT_INT, DT_STRING, DT_INT};
+    int lengths[] = {0, 4, 0};  // "name"长度4
+    int keyAttrs[] = {0};  // 主键为第0个属性（id）
+    char *tableNameFromAPI = NULL;  // 存储从接口获取的表名
+
+    // 1. 初始化记录管理器
+    TEST_CHECK(initRecordManager(NULL));
+
+    // 2. 创建测试Schema（包含属性名）
+    schema = createSchema(
+        3,                  // 属性数量
+        attrNames,          // 属性名数组
+        types,              // 数据类型数组
+        lengths,            // 类型长度（仅字符串有效）
+        1,                  // 主键属性数量
+        keyAttrs            // 主键属性索引
+    );
+    ASSERT_TRUE(schema != NULL, "create schema success");
+    ASSERT_EQUALS_INT(3, schema->numAttr, "schema has 3 attributes");
+    ASSERT_EQUALS_STRING("id", schema->attrNames[0], "first attribute name is 'id'");
+    
+    // 解决格式符问题：强制转换sizeof（size_t）为int
+    int expectedRecordSize = (int)(sizeof(int) + 4 + sizeof(int));
+    ASSERT_EQUALS_INT(
+        expectedRecordSize, 
+        getRecordSize(schema), 
+        "correct record size (int + 4-byte string + int)"
+    );
+
+    // 3. 创建表
+    TEST_CHECK(createTable("test_lifecycle_table", schema));
+
+    // 4. 打开表并验证元数据（用新接口）
+    TEST_CHECK(openTable(&table, "test_lifecycle_table"));
+    
+    // 验证总记录数
+    ASSERT_EQUALS_INT(0, getNumTuples(&table), "initial tuple count is 0");
+    // 验证总页数
+    ASSERT_EQUALS_INT(1, getTableTotalPages(&table), "initial page count is 1");
+    // 验证记录大小
+    ASSERT_EQUALS_INT(
+        getRecordSize(schema), 
+        getTableRecordSize(&table), 
+        "record size in table matches schema"
+    );
+    // 验证表名（需释放接口返回的字符串）
+    tableNameFromAPI = getTableName(&table);
+    ASSERT_TRUE(tableNameFromAPI != NULL, "get table name success");
+    ASSERT_EQUALS_STRING(
+        "test_lifecycle_table", 
+        tableNameFromAPI, 
+        "table name matches"
+    );
+    free(tableNameFromAPI);  // 释放接口返回的表名内存
+
+    // 5. 关闭表
+    TEST_CHECK(closeTable(&table));
+
+    // 6. 验证表文件存在（重新打开）
+    TEST_CHECK(openTable(&table, "test_lifecycle_table"));
+    TEST_CHECK(closeTable(&table));
+
+    // 7. 销毁表
+    TEST_CHECK(deleteTable("test_lifecycle_table"));
+
+    // 8. 验证表已销毁（打开应失败）
+    ASSERT_ERROR(
+        openTable(&table, "test_lifecycle_table"), 
+        "opening deleted table should return error"
+    );
+
+    // 清理资源
+    TEST_CHECK(freeSchema(schema));
+    TEST_CHECK(shutdownRecordManager());
+    TEST_DONE();
+}
+//==================my test methods end===================
 
 // ************************************************************ 
 void

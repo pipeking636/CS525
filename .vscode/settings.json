@@ -9,6 +9,9 @@
         "cstdlib": "c",
         "cmath": "c",
         "new": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "stdio.h": "c",
+        "compare": "c",
+        "cstdio": "c"
     }
 }

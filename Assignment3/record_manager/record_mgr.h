@@ -20,7 +20,10 @@ extern RC openTable (RM_TableData *rel, char *name);
 extern RC closeTable (RM_TableData *rel);
 extern RC deleteTable (char *name);
 extern int getNumTuples (RM_TableData *rel);
-
+// 在record_mgr.h的“table and manager”函数区添加以下声明
+extern int getTableTotalPages(RM_TableData *rel);       // 获取表总页数
+extern int getTableRecordSize(RM_TableData *rel);       // 获取记录大小
+extern char* getTableName(RM_TableData *rel);           // 获取表名
 // handling records in a table
 extern RC insertRecord (RM_TableData *rel, Record *record);
 extern RC deleteRecord (RM_TableData *rel, RID id);
