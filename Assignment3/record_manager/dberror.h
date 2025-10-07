@@ -36,6 +36,7 @@ typedef int RC; // define a new type for error code
 #define RC_RM_SCHEMA_TOO_LARGE 207 // Schema太大，超过页大小
 #define RC_RM_TOO_MANY_ATTRS 208 // 超过最大属性数
 #define RC_RM_INVALID_ARGUMENT 209    // 无效参数
+#define RC_RM_NO_MORE_SLOT 208 // 没有更多的槽位
 
 #define RC_IM_KEY_NOT_FOUND 300
 #define RC_IM_KEY_ALREADY_EXISTS 301

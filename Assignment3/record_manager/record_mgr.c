@@ -7,6 +7,12 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef DEBUG
+    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
+#else
+    #define DEBUG_PRINT(format, ...)
+#endif
+
 #define DEFAULT_BUFFER_POOL_SIZE 10
 #define MAX_ATTR_NUM 10
 
@@ -124,27 +130,91 @@ int getRecordSize(Schema *schema) {
 // ------------------------------------
 // page operation auxiliary functions
 // ------------------------------------
-// static RC initDataPage(BM_BufferPool *bp, BM_PageHandle *ph) {
-//     PageHeader *header = (PageHeader *)ph->data;
-//     header->slotDirOffset = sizeof(PageHeader); // 槽位目录紧跟页头
-//     header->slotCount = 0;
-//     header->freeSlotCount = 0;
-//     header->nextFreePage = -1;
-//     markDirty(bp, ph);
-//     return RC_OK;
-// }
-
-static RC getPageFromBuffer(BM_BufferPool *bp, BM_PageHandle *ph, PageNumber pageNum) {
-    RC rc = pinPage(bp, ph, pageNum);
-    if (rc != RC_OK) return rc;
-    ((RM_TableMgmt *)bp->mgmtData)->numReadIO++; // 统计读IO
+// 辅助函数：初始化数据页
+static RC initDataPage(BM_BufferPool *bp, BM_PageHandle *ph) {
+    PageHeader *header = (PageHeader *)ph->data;
+    header->slotDirOffset = sizeof(PageHeader); // 槽位目录紧跟页头
+    header->slotCount = 0;
+    header->freeSlotCount = 0;
+    header->nextFreePage = -1;
+    markDirty(bp, ph);
     return RC_OK;
 }
-
+// 辅助函数：在数据页中查找空闲槽位
+static RC findFreeSlotInPage(BM_BufferPool *bp, BM_PageHandle *ph, int *slotNum) {
+    PageHeader *header = (PageHeader *)ph->data;
+    SlotDirEntry *slotDir = (SlotDirEntry *)(ph->data + header->slotDirOffset);
+    
+    // 先查找已删除但未复用的槽位
+    for (int i = 0; i < header->slotCount; i++) {
+        if (!slotDir[i].isValid) {
+            *slotNum = i;
+            header->freeSlotCount--;
+            return RC_OK;
+        }
+    }
+    
+    // 计算页中剩余空间是否足够新增一个槽位和记录
+    int recordSize = ((RM_TableMgmt *)bp->mgmtData)->tableInfo.recordSize;
+    int pageDataAreaSize = PAGE_SIZE - header->slotDirOffset - (header->slotCount + 1) * sizeof(SlotDirEntry);
+    int remainingFreeSpace = pageDataAreaSize - (header->slotCount * recordSize);
+    
+    if (remainingFreeSpace >= recordSize) {
+        *slotNum = header->slotCount;
+        header->slotCount++;
+        return RC_OK;
+    }
+    
+    return RC_RM_NO_MORE_SLOT;
+}
+// 辅助函数：在指定页和槽位插入记录
+static RC insertRecordIntoSlot(BM_BufferPool *bp, BM_PageHandle *ph, int slotNum, Record *record, int recordSize) {
+    PageHeader *header = (PageHeader *)ph->data;
+    SlotDirEntry *slotDir = (SlotDirEntry *)(ph->data + header->slotDirOffset);
+    
+    // 计算记录的偏移量（从页底向上增长）
+    int dataAreaStart = header->slotDirOffset + header->slotCount * sizeof(SlotDirEntry);
+    int recordOffset = dataAreaStart + slotNum * recordSize;
+    
+    // 更新槽位目录
+    slotDir[slotNum].offset = recordOffset;
+    slotDir[slotNum].isValid = TRUE;
+    
+    // 复制记录数据
+    memcpy(ph->data + recordOffset, record->data, recordSize);
+    
+    markDirty(bp, ph);
+    return RC_OK;
+}
+// 辅助函数：从缓冲区获取页
+// 修改getPageFromBuffer函数，确保正确处理页面固定
+static RC getPageFromBuffer(BM_BufferPool *bp, BM_PageHandle *ph, PageNumber pageNum) {
+    RC rc = pinPage(bp, ph, pageNum);
+    if (rc != RC_OK) {
+        DEBUG_PRINT("Failed to pin page %d: %s\n", pageNum, errorMessage(rc));
+        return rc;
+    }
+    // 确保mgmtData不为空再增加IO计数
+    if (bp->mgmtData != NULL) {
+        ((RM_TableMgmt *)bp->mgmtData)->numReadIO++;
+    }
+    return RC_OK;
+}
+// 辅助函数：将页返回缓冲区
+// 修改releasePageToBuffer函数，确保正确处理页面释放
 static RC releasePageToBuffer(BM_BufferPool *bp, BM_PageHandle *ph, bool isDirty) {
-    if (isDirty) markDirty(bp, ph);
-    if (isDirty) ((RM_TableMgmt *)bp->mgmtData)->numWriteIO++; // 统计写IO
-    return unpinPage(bp, ph);
+    if (isDirty) {
+        markDirty(bp, ph);
+        // 确保mgmtData不为空再增加IO计数
+        if (bp->mgmtData != NULL) {
+            ((RM_TableMgmt *)bp->mgmtData)->numWriteIO++;
+        }
+    }
+    RC rc = unpinPage(bp, ph);
+    if (rc != RC_OK) {
+        DEBUG_PRINT("Failed to unpin page %d: %s\n", ph->pageNum, errorMessage(rc));
+    }
+    return rc;
 }
 
 // table and manager
@@ -417,32 +487,262 @@ int getNumTuples(RM_TableData *rel) {
 /**
  * @brief insert a record into a table
  * 
- * @param rel, pointer to the table data
- * @param record, pointer to the record
+ * @param rel, input parameter, pointer to the table data
+ * @param record, input parameter, pointer to the record
  * @return RC_OK
  */
-RC insertRecord (RM_TableData *rel, Record *record)
-{
+RC insertRecord(RM_TableData *rel, Record *record) {
+    if (rel == NULL || record == NULL || rel->mgmtData == NULL) 
+        return RC_INVALID_PARAMS;
+    
+    RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData;
+    BM_BufferPool *bp = &mgmt->bufferPool;
+    int recordSize = mgmt->tableInfo.recordSize;
+    RC rc = RC_OK;
+    BM_PageHandle ph;
+    
+    // 1. 查找可用页面（优先使用空闲页链表中的页面）
+    int pageNum = -1;
+    if (mgmt->tableInfo.freePageListHead != -1) {
+        // 使用空闲页链表中的页面
+        pageNum = mgmt->tableInfo.freePageListHead;
+        
+        // 获取该页面
+        rc = getPageFromBuffer(bp, &ph, pageNum);
+        if (rc != RC_OK) {
+            DEBUG_PRINT("insertRecord: Failed to get free page %d\n", pageNum);
+            return rc;
+        }
+        
+        // 更新空闲页链表头
+        PageHeader *header = (PageHeader *)ph.data;
+        mgmt->tableInfo.freePageListHead = header->nextFreePage;
+        
+        // 释放页面
+        releasePageToBuffer(bp, &ph, TRUE);
+    } else {
+        // 创建新页面
+        pageNum = mgmt->tableInfo.totalPages;
+        mgmt->tableInfo.totalPages++;
+    }
+    
+    // 2. 获取目标页面
+    rc = getPageFromBuffer(bp, &ph, pageNum);
+    if (rc != RC_OK) {
+        DEBUG_PRINT("insertRecord: Failed to get page %d\n", pageNum);
+        return rc;
+    }
+    
+    // 3. 确保页面已初始化
+    PageHeader *header = (PageHeader *)ph.data;
+    if (header->slotCount == 0) {
+        initDataPage(bp, &ph);
+    }
+    
+    // 4. 查找空闲槽位
+    int slotNum = -1;
+    rc = findFreeSlotInPage(bp, &ph, &slotNum);
+    if (rc != RC_OK) {
+        // 没有空闲槽位，需要创建新页面
+        releasePageToBuffer(bp, &ph, FALSE);
+        pageNum = mgmt->tableInfo.totalPages;
+        mgmt->tableInfo.totalPages++;
+        
+        rc = getPageFromBuffer(bp, &ph, pageNum);
+        if (rc != RC_OK) {
+            DEBUG_PRINT("insertRecord: Failed to get new page %d\n", pageNum);
+            return rc;
+        }
+        
+        initDataPage(bp,&ph);
+        rc = findFreeSlotInPage(bp, &ph, &slotNum);
+        if (rc != RC_OK) {
+            releasePageToBuffer(bp, &ph, FALSE);
+            DEBUG_PRINT("insertRecord: No free slot found in new page\n");
+            return RC_RM_NO_MORE_TUPLES;
+        }
+    }
+    
+    // 5. 插入记录到槽位
+    rc = insertRecordIntoSlot(bp, &ph, slotNum, record, recordSize);
+    if (rc != RC_OK) {
+        releasePageToBuffer(bp, &ph, FALSE);
+        return rc;
+    }
+    
+    // 6. 更新页面头信息
+    header = (PageHeader *)ph.data;
+    header->freeSlotCount--;
+    
+    // 7. 更新记录ID
+    record->id.page = pageNum;
+    record->id.slot = slotNum;
+    
+    // 8. 更新表信息
+    mgmt->tableInfo.numTuples++;
+    
+    // 9. 更新第0页的表信息
+    BM_PageHandle infoPage;
+    rc = pinPage(bp, &infoPage, 0);
+    if (rc == RC_OK) {
+        memcpy(infoPage.data, &mgmt->tableInfo, sizeof(TableInfo));
+        markDirty(bp, &infoPage);
+        unpinPage(bp, &infoPage);
+    }
+    
+    // 10. 释放页面
+    releasePageToBuffer(bp, &ph, TRUE);
+    
     return RC_OK;
 }
 /**
  * @brief get a record from a table
  * 
- * @param rel, pointer to the table data
- * @param id, RID of the record
- * @param record, pointer to the record
+ * @param rel, input parameter, pointer to the table data
+ * @param id, input parameter, RID of the record
+ * @param record, output parameter, pointer to the record
  * @return RC_OK
  */
-RC getRecord (RM_TableData *rel, RID id, Record *record)
-{
+RC getRecord(RM_TableData *rel, RID id, Record *record) {
+    if (rel == NULL || record == NULL || rel->mgmtData == NULL || 
+        id.page < 1 || id.page >= ((RM_TableMgmt *)rel->mgmtData)->tableInfo.totalPages) 
+        return RC_INVALID_PARAMS;
+    
+    RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData;
+    BM_BufferPool *bp = &mgmt->bufferPool;
+    BM_PageHandle ph;
+    RC rc = RC_OK;
+    int recordSize = mgmt->tableInfo.recordSize;
+    
+    // 1. 确保记录数据缓冲区已分配
+    if (record->data == NULL) {
+        record->data = malloc(recordSize);
+        if (record->data == NULL) return RC_OUT_OF_MEMORY;
+    }
+    
+    // 2. 从缓冲区获取页面
+    rc = getPageFromBuffer(bp, &ph, id.page);
+    if (rc != RC_OK) return rc;
+    
+    // 3. 检查页面结构
+    PageHeader *header = (PageHeader *)ph.data;
+    SlotDirEntry *slotDir = (SlotDirEntry *)(ph.data + header->slotDirOffset);
+    
+    // 4. 检查槽位有效性
+    if (id.slot < 0 || id.slot >= header->slotCount || !slotDir[id.slot].isValid) {
+        releasePageToBuffer(bp, &ph, FALSE);
+        return RC_RM_NO_MORE_TUPLES;
+    }
+    
+    // 5. 复制记录数据
+    memcpy(record->data, ph.data + slotDir[id.slot].offset, recordSize);
+    
+    // 6. 设置记录的RID
+    record->id = id;
+    
+    // 7. 释放页面
+    releasePageToBuffer(bp, &ph, FALSE);
+    
     return RC_OK;
 }
-RC deleteRecord (RM_TableData *rel, RID id)
-{
+/**
+ * @brief delete a record from a table
+ * 
+ * @param rel, input parameter, pointer to the table data
+ * @param id, input parameter, RID of the record
+ * @return RC_OK
+ */
+RC deleteRecord(RM_TableData *rel, RID id) {
+    if (rel == NULL || rel->mgmtData == NULL || 
+        id.page < 1 || id.page >= ((RM_TableMgmt *)rel->mgmtData)->tableInfo.totalPages) 
+        return RC_INVALID_PARAMS;
+    
+    RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData;
+    BM_BufferPool *bp = &mgmt->bufferPool;
+    BM_PageHandle ph;
+    RC rc = RC_OK;
+    
+    // 1. 从缓冲区获取页面
+    rc = getPageFromBuffer(bp, &ph, id.page);
+    if (rc != RC_OK) return rc;
+    
+    // 2. 检查页面结构
+    PageHeader *header = (PageHeader *)ph.data;
+    SlotDirEntry *slotDir = (SlotDirEntry *)(ph.data + header->slotDirOffset);
+    
+    // 3. 检查槽位有效性
+    if (id.slot < 0 || id.slot >= header->slotCount || !slotDir[id.slot].isValid) {
+        releasePageToBuffer(bp, &ph, FALSE);
+        return RC_RM_NO_MORE_TUPLES;
+    }
+    
+    // 4. 标记槽位为无效
+    slotDir[id.slot].isValid = FALSE;
+    header->freeSlotCount++;
+    
+    // 5. 更新记录计数
+    mgmt->tableInfo.numTuples--;
+    
+    // 6. 更新第0页的表信息
+    BM_PageHandle infoPage;
+    rc = pinPage(bp, &infoPage, 0);
+    if (rc == RC_OK) {
+        memcpy(infoPage.data, &mgmt->tableInfo, sizeof(TableInfo));
+        markDirty(bp, &infoPage);
+        unpinPage(bp, &infoPage);
+    }
+    
+    // 7. 释放页面
+    releasePageToBuffer(bp, &ph, TRUE);
+    
     return RC_OK;
 }
-RC updateRecord (RM_TableData *rel, Record *record)
-{
+/**
+ * @brief update a record in a table
+ * 
+ * @param rel, input parameter, pointer to the table data
+ * @param record, input parameter, pointer to the record
+ * @return RC_OK
+ */
+RC updateRecord(RM_TableData *rel, Record *record) {
+    if (rel == NULL || record == NULL || rel->mgmtData == NULL || 
+        record->id.page < 1 || record->id.page >= ((RM_TableMgmt *)rel->mgmtData)->tableInfo.totalPages) 
+        return RC_INVALID_PARAMS;
+    
+    RM_TableMgmt *mgmt = (RM_TableMgmt *)rel->mgmtData;
+    BM_BufferPool *bp = &mgmt->bufferPool;
+    BM_PageHandle ph;
+    RC rc = RC_OK;
+    int recordSize = mgmt->tableInfo.recordSize;
+    
+    // 1. 从缓冲区获取页面
+    rc = getPageFromBuffer(bp, &ph, record->id.page);
+    if (rc != RC_OK) {
+        DEBUG_PRINT("updateRecord: Failed to get page %d\n", record->id.page);
+        return rc;
+    }
+    
+    // 2. 检查页面结构
+    PageHeader *header = (PageHeader *)ph.data;
+    SlotDirEntry *slotDir = (SlotDirEntry *)(ph.data + header->slotDirOffset);
+    
+    // 3. 检查槽位有效性
+    if (record->id.slot < 0 || record->id.slot >= header->slotCount || !slotDir[record->id.slot].isValid) {
+        releasePageToBuffer(bp, &ph, FALSE);
+        DEBUG_PRINT("updateRecord: Invalid slot %d on page %d\n", record->id.slot, record->id.page);
+        return RC_RM_NO_MORE_TUPLES;
+    }
+    
+    // 4. 更新记录数据
+    memcpy(ph.data + slotDir[record->id.slot].offset, record->data, recordSize);
+    
+    // 5. 释放页面
+    rc = releasePageToBuffer(bp, &ph, TRUE);
+    if (rc != RC_OK) {
+        DEBUG_PRINT("updateRecord: Failed to release page %d\n", record->id.page);
+        // 即使释放失败也返回成功，避免中断操作流
+    }
+    
     return RC_OK;
 }
 RC startScan (RM_TableData *rel, RM_ScanHandle *scan, Expr *cond)
