@@ -83,14 +83,14 @@ main (void)
 	//my test
 	// testTableLifecycle(); // 第一阶段测试
 
-	// offical test
+	//offical test
 	testInsertManyRecords();
-	// testRecords();
-	// testCreateTableAndInsert();
-	// testUpdateTable();
-	// testScans();
-	// testScansTwo();
-	// testMultipleScans();
+	testRecords();
+	testCreateTableAndInsert();
+	testUpdateTable();
+	testScans();
+	testScansTwo();
+	testMultipleScans();
 
 	return 0;
 }

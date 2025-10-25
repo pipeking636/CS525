@@ -16,6 +16,8 @@
         "concepts": "c",
         "cstdarg": "c",
         "limits": "c",
-        "cstdint": "c"
+        "cstdint": "c",
+        "limits.h": "c",
+        "btree_mgr.h": "c"
     }
 }

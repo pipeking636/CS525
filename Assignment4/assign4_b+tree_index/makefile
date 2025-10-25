@@ -3,12 +3,12 @@ CC = gcc
 CFLAGS = -g -Wall   # 无需 -c，需要链接
 
 # 目标可执行文件
-TARGET1 = test_assign3_1
+TARGET1 = test_assign4_1
 TARGET2 = test_expr
 
 # 源文件列表（记录管理器和测试代码）
-SRCS1 = storage_mgr.c buffer_mgr.c record_mgr.c dberror.c rm_serializer.c expr.c test_assign3_1.c
-SRCS2 = storage_mgr.c buffer_mgr.c record_mgr.c dberror.c rm_serializer.c expr.c test_expr.c
+SRCS1 = storage_mgr.c buffer_mgr.c record_mgr.c btree_mgr.c dberror.c rm_serializer.c expr.c test_assign4_1.c
+SRCS2 = storage_mgr.c buffer_mgr.c record_mgr.c btree_mgr.c dberror.c rm_serializer.c expr.c test_expr.c
 # 对应的目标文件
 OBJS1 = $(SRCS1:.c=.o)
 OBJS2 = $(SRCS2:.c=.o)
