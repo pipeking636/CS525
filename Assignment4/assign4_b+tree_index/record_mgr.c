@@ -178,16 +178,6 @@ static RC findFreeSlotInPage(BM_BufferPool *bp, BM_PageHandle *ph, int *slotNum,
     
 }
 
-// 辅助函数：forcePageToDisk，确保关键页面被持久化
-static RC forcePageToDisk(BM_BufferPool *bp, int pageNum) {
-    BM_PageHandle ph;
-    RC rc = pinPage(bp, &ph, pageNum);
-    if (rc == RC_OK) {
-        forcePage(bp, &ph);
-        unpinPage(bp, &ph);
-    }
-    return rc;
-}
 // 辅助函数：在指定页和槽位插入记录
 static RC insertRecordIntoSlot(BM_BufferPool *bp, BM_PageHandle *ph, int slotNum, Record *record, int recordSize) {
     PageHeader *header = (PageHeader *)ph->data;
