@@ -18,6 +18,7 @@
         "limits": "c",
         "cstdint": "c",
         "limits.h": "c",
-        "btree_mgr.h": "c"
+        "btree_mgr.h": "c",
+        "dberror.h": "c"
     }
 }
