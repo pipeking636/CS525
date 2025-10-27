@@ -425,11 +425,25 @@ void traverse_leaves(BPlusNode* root) {
 void print_bplus_tree(BPlusTree* tree) {
     if (tree == NULL || tree->root == NULL) {
         printf("=== B+ Tree (Empty) ===\n");
+        
+        // 同时输出到log.txt文件
+        FILE* log_file = fopen("log.txt", "a");
+        if (log_file != NULL) {
+            fprintf(log_file, "=== B+ Tree (Empty) ===\n");
+            fclose(log_file);
+        }
         return;
     }
 
     printf("=== B+ Tree Structure (Align with doc CS525_B+Tree_Exercise.pdf) ===\n");
     printf("Max Keys per node (n) = %d | Level: Root = Level 1\n", MAX_KEYS);
+    
+    // 同时输出到log.txt文件
+    FILE* log_file = fopen("log.txt", "a");
+    if (log_file != NULL) {
+        fprintf(log_file, "=== B+ Tree Structure (Align with doc CS525_B+Tree_Exercise.pdf) ===\n");
+        fprintf(log_file, "Max Keys per node (n) = %d | Level: Root = Level 1\n", MAX_KEYS);
+    }
 
     // 用队列实现BFS分层遍历，存储节点和对应的层级
     typedef struct QueueNode {
@@ -452,6 +466,9 @@ void print_bplus_tree(BPlusTree* tree) {
         // 层级切换时打印分隔线
         if (q_node.level != current_level) {
             printf("--------------------------------------------------\n");
+            if (log_file != NULL) {
+                fprintf(log_file, "--------------------------------------------------\n");
+            }
             current_level = q_node.level;
         }
 
@@ -460,39 +477,75 @@ void print_bplus_tree(BPlusTree* tree) {
             // 叶节点：显示层级、父节点索引、键数、键值、数据指针、next叶节点（文档1-4/1-6）
             printf("Level %d | Leaf Node (Parent idx: %d) | Keys: %d | [ ", 
                    q_node.level, q_node.parent_idx, node->key_num);
+            if (log_file != NULL) {
+                fprintf(log_file, "Level %d | Leaf Node (Parent idx: %d) | Keys: %d | [ ", 
+                       q_node.level, q_node.parent_idx, node->key_num);
+            }
             for (int i = 0; i < node->key_num; i++) {
-                // 数据指针简化为“&data=值”（文档1-4：叶节点存指向主文件的指针）
+                // 数据指针简化为"&data=值"（文档1-4：叶节点存指向主文件的指针）
                 printf("key=%d (data=%d) ", node->keys[i], *(int*)node->ptrs[i]);
+                if (log_file != NULL) {
+                    fprintf(log_file, "key=%d (data=%d) ", node->keys[i], *(int*)node->ptrs[i]);
+                }
             }
             // 显示叶节点的next指针（文档1-6：叶节点按顺序排列，通过next形成链表）
             if (node->ptrs[MAX_KEYS + 1] != NULL) {
                 printf("] | Next Leaf: 0x%lx\n", (unsigned long)node->ptrs[MAX_KEYS + 1]);
+                if (log_file != NULL) {
+                    fprintf(log_file, "] | Next Leaf: 0x%lx\n", (unsigned long)node->ptrs[MAX_KEYS + 1]);
+                }
             } else {
                 printf("] | Next Leaf: NULL\n");
+                if (log_file != NULL) {
+                    fprintf(log_file, "] | Next Leaf: NULL\n");
+                }
             }
         } else {
             // 非叶节点：显示层级、父节点索引、键数、键值、子节点指针（文档1-3：仅存键与子节点指针）
             printf("Level %d | Non-Leaf Node (Parent idx: %d) | Keys: %d | [ ", 
                    q_node.level, q_node.parent_idx, node->key_num);
+            if (log_file != NULL) {
+                fprintf(log_file, "Level %d | Non-Leaf Node (Parent idx: %d) | Keys: %d | [ ", 
+                       q_node.level, q_node.parent_idx, node->key_num);
+            }
             for (int i = 0; i < node->key_num; i++) {
                 printf("key=%d ", node->keys[i]);
+                if (log_file != NULL) {
+                    fprintf(log_file, "key=%d ", node->keys[i]);
+                }
             }
             printf("] | Children (count: %d): [ ", node->key_num + 1);
+            if (log_file != NULL) {
+                fprintf(log_file, "] | Children (count: %d): [ ", node->key_num + 1);
+            }
             // 打印子节点指针，并将子节点入队（用于下一层遍历）
             for (int i = 0; i < node->key_num + 1; i++) {
                 if (node->ptrs[i] != NULL) {
                     printf("0x%lx ", (unsigned long)node->ptrs[i]);
+                    if (log_file != NULL) {
+                        fprintf(log_file, "0x%lx ", (unsigned long)node->ptrs[i]);
+                    }
                     // 子节点入队（层级+1，父节点索引为当前子节点的序号i）
                     queue[rear++] = (QueueNode){(BPlusNode*)node->ptrs[i], q_node.level + 1, i};
                 } else {
                     printf("NULL ");
+                    if (log_file != NULL) {
+                        fprintf(log_file, "NULL ");
+                    }
                 }
             }
             printf("]\n");
+            if (log_file != NULL) {
+                fprintf(log_file, "]\n");
+            }
         }
     }
 
     printf("=== End of B+ Tree Structure ===\n\n");
+    if (log_file != NULL) {
+        fprintf(log_file, "=== End of B+ Tree Structure ===\n\n");
+        fclose(log_file); // 关闭文件
+    }
     free(queue);
 }
 // -------------------------- 测试主函数（基于文档Question 1插入示例） --------------------------
