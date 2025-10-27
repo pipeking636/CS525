@@ -113,7 +113,7 @@ void split_non_leaf(BPlusNode* parent, int index) {
     curr_non_leaf->parent = parent;
 
     // 非叶节点分裂：中间键提升到父节点，左节点保留中间键左侧的所有键
-    // 中间键索引（n=3时mid=1，取curr_non_leaf->keys[1]为中间键，文档1-44示例）
+    // 中间键索引（n=3时mid=1，取curr_non_leaf->keys[1]为中间键）
     int mid = curr_non_leaf->key_num / 2; // 修正为使用实际键数
     int middle_key = curr_non_leaf->keys[mid];
 
@@ -186,12 +186,12 @@ void insert(BPlusTree* tree, int key, void* data) {
         new_root->ptrs[0] = root;
         root->parent = new_root;
 
-        // 先将新键插入到原根节点
-        insert_non_full(root, key, data);
-        
-        // 然后再分裂原根节点
+        // 修正：先分裂原根节点
         if (root->is_leaf) split_leaf(new_root, 0);
         else split_non_leaf(new_root, 0);
+        
+        // 然后再插入新键（此时根已经分裂，使用新的根节点插入）
+        insert_non_full(new_root, key, data);
     } else {
         insert_non_full(root, key, data);
     }
