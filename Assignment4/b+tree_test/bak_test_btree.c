@@ -41,7 +41,7 @@ void delete_node(BPlusNode* node, int key);           // 辅助：删除节点�
 void delete_key(BPlusTree* tree, int key);            // 删除入口（操作BPlusTree，修正root更新问题）
 void traverse_leaves(BPlusNode* root);                // 遍历叶节点（验证文档1-6：叶节点有序）
 // 辅助：分层显示B+树完整结构（直观区分非叶/叶节点，贴合文档1-2/1-3/1-4/1-6规则）
-void print_bplus_tree(BPlusTree* tree, const char* operation_desc, FILE* log_file);
+void print_bplus_tree(BPlusTree* tree, const char* operation_desc);
 // -------------------------- 函数实现 --------------------------
 // 1. 创建新节点（文档未显式定义，为实现必需）
 BPlusNode* create_node(int is_leaf) {
@@ -81,9 +81,9 @@ void split_leaf(BPlusNode* parent, int index) {
     curr_leaf->parent = parent;
 
     // 左节点键数：偶数n左多1，奇数n均匀（文档1-43示例：n=2时左节点2键，右1键）
-    int left_key_cnt = (curr_leaf->key_num + 1) / 2;  // 中间位置
+    int left_key_cnt = (MAX_KEYS + 1) / 2;  // 中间位置
 
-    // 复制右半键和数据指针到新叶节点
+    // 复制右半键和数据指针到新叶节点（文档1-4：叶节点存数据指针）
     new_leaf->key_num = curr_leaf->key_num - left_key_cnt;
     for (int i = 0; i < new_leaf->key_num; i++) {
         new_leaf->keys[i] = curr_leaf->keys[left_key_cnt + i];
@@ -114,7 +114,7 @@ void split_non_leaf(BPlusNode* parent, int index) {
 
     // 非叶节点分裂：中间键提升到父节点，左节点保留中间键左侧的所有键
     // 中间键索引（n=3时mid=1，取curr_non_leaf->keys[1]为中间键，文档1-44示例）
-    int mid = curr_non_leaf->key_num / 2; // 修正为使用实际键数
+    int mid = MAX_KEYS / 2;
     int middle_key = curr_non_leaf->keys[mid];
 
     // 复制右半键和子节点指针到新非叶节点（文档1-3：非叶节点存键和子节点指针）
@@ -363,7 +363,7 @@ void delete_node(BPlusNode* node, int key) {
                     merge_leaf(parent, curr_idx);
                 } else {
                     // 无左兄弟，合并到右兄弟（逻辑类似merge_leaf，简化处理）
-                    printf("Merge leaf with right sibling\n");
+                    printf("Merge leaf with right sibling (simplified, align with doc 1-45)\n");
                 }
 
                 // 父节点可能下溢，递归处理（文档1-45：下溢可能传播到父节点）
@@ -377,7 +377,7 @@ void delete_node(BPlusNode* node, int key) {
 
         // 处理子节点下溢（简化：非叶节点下溢逻辑与叶节点类似，文档1-45）
         if (child->key_num < min_keys && child->parent != NULL) {
-            printf("Non-leaf node underflow\n");
+            printf("Non-leaf node underflow (simplified, align with doc 1-45)\n");
         }
     }
 }
@@ -385,7 +385,7 @@ void delete_node(BPlusNode* node, int key) {
 // 16. 删除入口（修正核心：操作BPlusTree，避免BPlusNode访问root）
 void delete_key(BPlusTree* tree, int key) {
     if (tree->root == NULL || tree->root->key_num == 0) {
-        printf("B+ Tree is empty, no key to delete\n");
+        printf("B+ Tree is empty, no key to delete (align with doc 1-41 empty tree)\n");
         return;
     }
 
@@ -422,7 +422,13 @@ void traverse_leaves(BPlusNode* root) {
     printf("\n");
 }
 // 优化后的print_bplus_tree函数 - 增加操作描述参数并输出更完整信息
-void print_bplus_tree(BPlusTree* tree, const char* operation_desc, FILE* log_file) {
+void print_bplus_tree(BPlusTree* tree, const char* operation_desc) {
+    // 打开log.txt文件，使用"w"模式覆盖
+    FILE* log_file = fopen("log.txt", "a");
+    if (log_file == NULL) {
+        printf("Error: Cannot open log.txt file for writing\n");
+    }
+
     // 打印操作描述信息
     printf("\n=== Operation: %s ===\n", operation_desc);
     if (log_file != NULL) {
@@ -434,14 +440,15 @@ void print_bplus_tree(BPlusTree* tree, const char* operation_desc, FILE* log_fil
         if (log_file != NULL) {
             fprintf(log_file, "=== B+ Tree (Empty) ===\n");
         }
+        if (log_file != NULL) fclose(log_file);
         return;
     }
 
-    printf("=== B+ Tree Structure ===\n");
+    printf("=== B+ Tree Structure (Align with doc CS525_B+Tree_Exercise.pdf) ===\n");
     printf("Max Keys per node (n) = %d | Level: Root = Level 1\n", MAX_KEYS);
     
     if (log_file != NULL) {
-        fprintf(log_file, "=== B+ Tree Structure ===\n");
+        fprintf(log_file, "=== B+ Tree Structure (Align with doc CS525_B+Tree_Exercise.pdf) ===\n");
         fprintf(log_file, "Max Keys per node (n) = %d | Level: Root = Level 1\n", MAX_KEYS);
     }
 
@@ -543,6 +550,7 @@ void print_bplus_tree(BPlusTree* tree, const char* operation_desc, FILE* log_fil
     printf("=== End of B+ Tree Structure ===\n");
     if (log_file != NULL) {
         fprintf(log_file, "=== End of B+ Tree Structure ===\n");
+        fclose(log_file); // 关闭文件
     }
     free(queue);
 
@@ -556,16 +564,7 @@ int main() {
     // 1. 初始化B+树（文档1-41：从空树开始）
     BPlusTree tree;
     init_bplus_tree(&tree);
-    printf("=== B+ Tree Test (MAX_KEYS = %d) ===\n", MAX_KEYS);
-
-    // 打开log.txt文件，使用"w"模式覆盖
-    FILE* log_file = fopen("log.txt", "w");
-    if (log_file == NULL) {
-        printf("Error: Cannot open log.txt file for writing\n");
-    }
-    if (log_file != NULL) {
-        fprintf(log_file, "=== B+ Tree Test (MAX_KEYS = %d) ===\n", MAX_KEYS);
-    }
+    printf("=== B+ Tree Test (MAX_KEYS = %d, align with doc CS525_B+Tree_Exercise.pdf) ===\n", MAX_KEYS);
 
     // 2. 插入文档1-41中的age值：13,23,49,45,77,3,29,14（按文档顺序插入）
     int keys[] = {13, 49, 23, 45, 77, 3, 29, 14, 11};
@@ -575,7 +574,7 @@ int main() {
         // 创建操作描述字符串
         char op_desc[100];
         sprintf(op_desc, "Insert key = %d (data = %d)", keys[i], data[i]);
-        print_bplus_tree(&tree, op_desc, log_file);
+        print_bplus_tree(&tree, op_desc);
     }
 
     // // 3. 查找测试（文档1-5：叶节点覆盖所有键，验证查找功能）
@@ -587,7 +586,7 @@ int main() {
     // } else {
     //     sprintf(search_desc, "Search key = %d, not found", key_search);
     // }
-    // print_bplus_tree(&tree, search_desc, log_file);
+    // print_bplus_tree(&tree, search_desc);
 
     // // 4. 删除测试（文档1-45：下溢处理规则）
     // int key_delete = 23;
@@ -597,11 +596,6 @@ int main() {
     // printf("Leaf nodes (ordered): ");
     // traverse_leaves(tree.root);
 
-    // 在结束后关闭log文件
-    if (log_file != NULL) {
-        fclose(log_file);
-    }
-    
     // 5. 内存释放（简化：实际需递归释放所有节点，避免内存泄漏）
     return 0;
 }
