@@ -589,16 +589,16 @@ int main() {
         print_bplus_tree(&tree, op_desc, log_file);
     }
 
-    // // 3. 查找测试（文档1-5：叶节点覆盖所有键，验证查找功能）
-    // int key_search = 45;
-    // int* found = (int*)search(tree.root, key_search);
-    // char search_desc[100];
-    // if (found != NULL) {
-    //     sprintf(search_desc, "Search key = %d, found with data = %d", key_search, *found);
-    // } else {
-    //     sprintf(search_desc, "Search key = %d, not found", key_search);
-    // }
-    // print_bplus_tree(&tree, search_desc, log_file);
+    // 3. 查找测试（文档1-5：叶节点覆盖所有键，验证查找功能）
+    int key_search = 11;
+    int* found = (int*)search(tree.root, key_search);
+    char search_desc[100];
+    if (found != NULL) {
+        sprintf(search_desc, "Search key = %d, found with data = %d", key_search, *found);
+    } else {
+        sprintf(search_desc, "Search key = %d, not found", key_search);
+    }
+    print_bplus_tree(&tree, search_desc, log_file);
 
     // // 4. 删除测试（文档1-45：下溢处理规则）
     // int key_delete = 23;
