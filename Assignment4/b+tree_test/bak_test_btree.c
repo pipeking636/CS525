@@ -73,76 +73,63 @@ int find_key_index(BPlusNode* node, int key) {
     return idx;
 }
 
-// 4. 分裂叶节点（遵循文档B+树节点的分裂操作：n为奇数时左右均匀，偶数时左多1键）
+// 4. 分裂叶节点（遵循文档1-43：n为偶数时左节点多1键，插入父节点的键为右节点最小键）
 void split_leaf(BPlusNode* parent, int index) {
     BPlusNode* curr_leaf = (BPlusNode*)parent->ptrs[index];
     BPlusNode* new_leaf = create_node(1);
     new_leaf->parent = parent;
     curr_leaf->parent = parent;
 
-    int left_key_cnt;
-    if (MAX_KEYS % 2 == 1) {  // n为奇数时（如n=3）
-        left_key_cnt = (MAX_KEYS + 1) / 2; // 左节点键数 = (3+1)/2 = 2
-    } else {  // n为偶数时（如n=2）
-        left_key_cnt = ((MAX_KEYS + 1) / 2) + 1; // 左节点键数多1
-    }
+    // 左节点键数：偶数n左多1，奇数n均匀（文档1-43示例：n=2时左节点2键，右1键）
+    int left_key_cnt = (curr_leaf->key_num + 1) / 2;  // 中间位置
 
-    // 复制右半键和数据指针到新叶节点（总键数为MAX_KEYS+1）
-    new_leaf->key_num = (MAX_KEYS + 1) - left_key_cnt;
+    // 复制右半键和数据指针到新叶节点
+    new_leaf->key_num = curr_leaf->key_num - left_key_cnt;
     for (int i = 0; i < new_leaf->key_num; i++) {
         new_leaf->keys[i] = curr_leaf->keys[left_key_cnt + i];
         new_leaf->ptrs[i] = curr_leaf->ptrs[left_key_cnt + i];
     }
 
-    // 更新叶节点链表指针
+    // 叶节点链表：原节点指向新节点（文档未显式说明，为遍历有序叶节点必需）
     new_leaf->ptrs[MAX_KEYS + 1] = curr_leaf->ptrs[MAX_KEYS + 1];
     curr_leaf->ptrs[MAX_KEYS + 1] = new_leaf;
     curr_leaf->key_num = left_key_cnt;
 
-    // 父节点插入新键（右节点最小键）
+    // 父节点插入新键（右节点最小键）和新子节点指针（文档1-43规则）
     for (int i = parent->key_num; i > index; i--) {
         parent->keys[i] = parent->keys[i - 1];
         parent->ptrs[i + 1] = parent->ptrs[i];
     }
-    parent->keys[index] = new_leaf->keys[0];
+    parent->keys[index] = new_leaf->keys[0]; // 插入父节点的键为右节点最小键（文档1-43）
     parent->ptrs[index + 1] = new_leaf;
     parent->key_num++;
 }
 
-// 5. 分裂非叶节点（遵循文档B+树节点的分裂操作：中间键上推）
+// 5. 分裂非叶节点（遵循文档1-44：中间键取右节点，插入父节点）
 void split_non_leaf(BPlusNode* parent, int index) {
     BPlusNode* curr_non_leaf = (BPlusNode*)parent->ptrs[index];
     BPlusNode* new_non_leaf = create_node(0);
     new_non_leaf->parent = parent;
     curr_non_leaf->parent = parent;
 
-    int mid;
-    int middle_key;
-    if (MAX_KEYS % 2 == 1) {  // n为奇数时（如n=3）
-        // 中间键为右节点第一个键（原节点的mid索引）
-        mid = (MAX_KEYS + 1) / 2; // 对于n=3，mid=2
-        middle_key = curr_non_leaf->keys[mid]; // 取原节点第mid个键
-    } else {  // n为偶数时（如n=2）
-        // 中间键为左节点最后一个键（原节点的mid-1索引）
-        mid = ((MAX_KEYS + 1) / 2) + 1; // 对于n=2，mid=2
-        middle_key = curr_non_leaf->keys[mid - 1];
-    }
+    // 非叶节点分裂：中间键提升到父节点，左节点保留中间键左侧的所有键
+    // 中间键索引（n=3时mid=1，取curr_non_leaf->keys[1]为中间键）
+    int mid = curr_non_leaf->key_num / 2; // 修正为使用实际键数
+    int middle_key = curr_non_leaf->keys[mid];
 
-    // 复制右半键和子节点指针到新非叶节点
-    new_non_leaf->key_num = MAX_KEYS - mid; // 右节点键数 = 总键数(MAX_KEYS+1) - 左节点键数(mid) - 中间键(1)
+    // 复制右半键和子节点指针到新非叶节点（文档1-3：非叶节点存键和子节点指针）
+    new_non_leaf->key_num = curr_non_leaf->key_num - (mid + 1);
     for (int i = 0; i < new_non_leaf->key_num; i++) {
-        new_non_leaf->keys[i] = curr_non_leaf->keys[mid + 1 + i]; // 跳过中间键
+        new_non_leaf->keys[i] = curr_non_leaf->keys[mid + 1 + i];
         new_non_leaf->ptrs[i] = curr_non_leaf->ptrs[mid + 1 + i];
-        ((BPlusNode*)new_non_leaf->ptrs[i])->parent = new_non_leaf;
+        ((BPlusNode*)new_non_leaf->ptrs[i])->parent = new_non_leaf; // 更新子节点父指针
     }
-    // 复制最后一个子节点指针
+    // 复制最后一个子节点指针（非叶节点指针数=键数+1，文档1-12表格）
     new_non_leaf->ptrs[new_non_leaf->key_num] = curr_non_leaf->ptrs[mid + 1 + new_non_leaf->key_num];
     ((BPlusNode*)new_non_leaf->ptrs[new_non_leaf->key_num])->parent = new_non_leaf;
-
-    // 左节点保留前mid个键（0~mid-1）
     curr_non_leaf->key_num = mid;
 
-    // 父节点插入中间键和新子节点指针
+    // 父节点插入中间键和新子节点指针（文档1-44：中间键取右节点）
     for (int i = parent->key_num; i > index; i--) {
         parent->keys[i] = parent->keys[i - 1];
         parent->ptrs[i + 1] = parent->ptrs[i];
@@ -152,12 +139,12 @@ void split_non_leaf(BPlusNode* parent, int index) {
     parent->key_num++;
 }
 
-// 6. 向非满节点插入（修正为：先插入，再处理子节点分裂）
+// 6. 向非满节点插入（递归，文档1-41：按顺序插入）
 void insert_non_full(BPlusNode* node, int key, void* data) {
     int idx = node->key_num - 1;
 
     if (node->is_leaf) {
-        // 叶节点：插入键值并保持有序
+        // 叶节点：找到正确的位置插入
         while (idx >= 0 && key < node->keys[idx]) {
             node->keys[idx + 1] = node->keys[idx];
             node->ptrs[idx + 1] = node->ptrs[idx];
@@ -165,49 +152,50 @@ void insert_non_full(BPlusNode* node, int key, void* data) {
         }
         node->keys[idx + 1] = key;
         node->ptrs[idx + 1] = data;
-        node->key_num++; // 插入后键数+1
-
-        // 叶节点插入后无需主动分裂，由父节点处理（根节点由insert处理）
+        node->key_num++;
     } else {
-        // 非叶节点：先找到子节点并插入
+        // 非叶节点：找到应该插入的子树
         while (idx >= 0 && key < node->keys[idx]) {
             idx--;
         }
         idx++;
+        
+        // 检查子节点是否需要分裂
         BPlusNode* child = (BPlusNode*)node->ptrs[idx];
-
-        // 递归插入子节点
-        insert_non_full(child, key, data);
-
-        // 子节点插入后若溢出，分裂子节点
-        if (child->key_num > MAX_KEYS) {
-            if (child->is_leaf) {
-                split_leaf(node, idx);
-            } else {
-                split_non_leaf(node, idx);
+        if (child->key_num == MAX_KEYS) {
+            // 先分裂子节点
+            if (child->is_leaf) split_leaf(node, idx);
+            else split_non_leaf(node, idx);
+            // 分裂后确定插入子节点
+            if (key > node->keys[idx]) {
+                idx++;
             }
         }
+        insert_non_full((BPlusNode*)node->ptrs[idx], key, data);
     }
 }
 
-// 7. 插入入口（修正为：先插入，再分裂根节点）
+// 7. 插入入口（处理根节点满的情况，文档1-41：从空树插入示例）
 void insert(BPlusTree* tree, int key, void* data) {
     BPlusNode* root = tree->root;
 
-    // 第一步：直接插入（递归至叶节点）
-    insert_non_full(root, key, data);
-
-    // 第二步：若根节点插入后溢出，分裂根节点
-    if (root->key_num > MAX_KEYS) {
+    // 根节点满：创建新根，先插入新键再分裂原根
+    if (root->key_num == MAX_KEYS) {
         BPlusNode* new_root = create_node(0);
         tree->root = new_root;
         new_root->ptrs[0] = root;
         root->parent = new_root;
 
-        // 根据原根节点类型分裂
+        // 修正：先分裂原根节点
         if (root->is_leaf) split_leaf(new_root, 0);
         else split_non_leaf(new_root, 0);
+        
+        // 然后再插入新键（此时根已经分裂，使用新的根节点插入）
+        insert_non_full(new_root, key, data);
+    } else {
+        insert_non_full(root, key, data);
     }
+
 }
 
 // 8. 查找键对应的数据（递归，文档1-5：所有叶节点覆盖所有键，1-6：叶节点有序）
@@ -234,14 +222,15 @@ void* search(BPlusNode* node, int key) {
     }
 }
 
-// 9. 计算节点最小键数（严格遵循文档B+树节点的分裂操作表格）
+// 9. 计算节点最小键数（遵循文档1-12表格：非根节点min keys规则）
 int get_min_keys(BPlusNode* node) {
     if (node == NULL) return 0;
-    // 根节点最小1个键
+    // 根节点最小1个键（文档1-13：仅1条记录时根节点min ptrs=1，对应min keys=1）
     if (node->parent == NULL) return 1;
-    // 叶节点（非根）：min keys = floor((MAX_KEYS+1)/2)
+    // 叶节点（非根）：min keys = floor((MAX_KEYS+1)/2)（文档1-12表格：Leaf (non-root) min keys）
     if (node->is_leaf) return (MAX_KEYS + 1) / 2;
-    // 非叶节点（非根）：min keys = ceil((n+1)/2) - 1 = (n+2)/2 - 1
+    // 非叶节点（非根）：min keys = ceil((n+1)/2) - 1
+    // 对于整数运算，ceil((n+1)/2) = (n+2)/2
     return (MAX_KEYS + 2) / 2 - 1;
 }
 
@@ -579,8 +568,8 @@ int main() {
     }
 
     // 2. 插入文档1-41中的age值：13,23,49,45,77,3,29,14（按文档顺序插入）
-    int keys[] = {13, 49, 23, 45, 77, 3, 29, 14, 11, 78};
-    int data[] = {111, 333, 222, 444, 555, 666, 777, 888, 999, 1000}; // 数据随意选取（实际情况是叶节点存数据指针）
+    int keys[] = {13, 49, 23, 45, 77, 3, 29, 14, 11};
+    int data[] = {111, 333, 222, 444, 555, 666, 777, 888, 999}; // 数据随意选取（实际情况是叶节点存数据指针）
     for (int i = 0; i < sizeof(keys)/sizeof(keys[0]); i++) {
         insert(&tree, keys[i], &data[i]);
         // 创建操作描述字符串
