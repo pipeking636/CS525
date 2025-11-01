@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 // -------------------------- 配置参数（对应文档中的n） --------------------------
 #define MAX_KEYS 3  // 节点最大键数
@@ -80,12 +81,9 @@ void split_leaf(BPlusNode* parent, int index) {
     new_leaf->parent = parent;
     curr_leaf->parent = parent;
 
-    int left_key_cnt;
-    if (MAX_KEYS % 2 == 1) {  // n为奇数时（如n=3）
-        left_key_cnt = (MAX_KEYS + 1) / 2; // 左节点键数 = (3+1)/2 = 2
-    } else {  // n为偶数时（如n=2）
-        left_key_cnt = ((MAX_KEYS + 1) / 2) + 1; // 左节点键数多1
-    }
+
+    // 可以统一为：左节点键数 = (n+1 + 1) / 2（当n为奇数时，(n+1)为偶数；当n为偶数时，(n+1)为奇数，加1后为偶数）
+    int left_key_cnt = (int)ceil((MAX_KEYS+1)/2); // 左节点键数 = (MAX_KEYS+1)/2
 
     // 复制右半键和数据指针到新叶节点（总键数为MAX_KEYS+1）
     new_leaf->key_num = (MAX_KEYS + 1) - left_key_cnt;
@@ -116,15 +114,16 @@ void split_non_leaf(BPlusNode* parent, int index) {
     new_non_leaf->parent = parent;
     curr_non_leaf->parent = parent;
 
-    int mid;
+    
+    int mid  = (int)ceil((MAX_KEYS + 1) / 2.0);// 使用ceil()函数计算中间索引，统一处理奇数和偶数n
     int middle_key;
     if (MAX_KEYS % 2 == 1) {  // n为奇数时（如n=3）
         // 中间键为右节点第一个键（原节点的mid索引）
-        mid = (MAX_KEYS + 1) / 2; // 对于n=3，mid=2
+        // mid = (MAX_KEYS + 1) / 2; // 对于n=3，mid=2
         middle_key = curr_non_leaf->keys[mid]; // 取原节点第mid个键
     } else {  // n为偶数时（如n=2）
         // 中间键为左节点最后一个键（原节点的mid-1索引）
-        mid = ((MAX_KEYS + 1) / 2) + 1; // 对于n=2，mid=2
+        // mid = ((MAX_KEYS + 1) / 2) + 1; // 对于n=2，mid=2
         middle_key = curr_non_leaf->keys[mid - 1];
     }
 
@@ -240,9 +239,9 @@ int get_min_keys(BPlusNode* node) {
     // 根节点最小1个键
     if (node->parent == NULL) return 1;
     // 叶节点（非根）：min keys = floor((MAX_KEYS+1)/2)
-    if (node->is_leaf) return (MAX_KEYS + 1) / 2;
+    if (node->is_leaf) return (int)floor((MAX_KEYS + 1) / 2.0);
     // 非叶节点（非根）：min keys = ceil((n+1)/2) - 1 = (n+2)/2 - 1
-    return (MAX_KEYS + 2) / 2 - 1;
+    return (int)ceil((MAX_KEYS + 1) / 2.0) - 1;
 }
 
 // 10. 删除叶节点的键（文档1-45：下溢处理前先删除键）

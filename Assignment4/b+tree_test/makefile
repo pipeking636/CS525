@@ -16,7 +16,7 @@ all: $(TARGET1)
 
 # 链接：将 .o 文件链接为可执行文件
 $(TARGET1): $(OBJS1)
-	$(CC) $(CFLAGS) $(OBJS1) -o $@
+	$(CC) $(CFLAGS) $(OBJS1) -o $(TARGET1) -lm
 	@echo "已生成可执行文件 $@"
 
 # 编译 .c 文件为 .o 文件
