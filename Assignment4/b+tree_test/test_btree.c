@@ -26,22 +26,22 @@ typedef struct BPlusTree {
 // -------------------------- 函数声明 --------------------------
 BPlusNode* create_node(int is_leaf);                  // 创建新节点
 void init_bplus_tree(BPlusTree* tree);                // 初始化B+树
-int find_key_index(BPlusNode* node, int key);         // 找到键的插入/查找索引（文档1-6：叶节点有序）
-void split_leaf(BPlusNode* parent, int index);        // 分裂叶节点（文档1-42/1-43：偶数n左多1键）
-void split_non_leaf(BPlusNode* parent, int index);    // 分裂非叶节点（文档1-44：中间键取右节点）
+int find_key_index(BPlusNode* node, int key);         // 找到键的插入/查找索引（叶节点有序）
+void split_leaf(BPlusNode* parent, int index);        // 分裂叶节点（偶数n左多1键）
+void split_non_leaf(BPlusNode* parent, int index);    // 分裂非叶节点（中间键取右节点）
 void insert_non_full(BPlusNode* node, int key, void* data); // 向非满节点插入
-void insert(BPlusTree* tree, int key, void* data);    // 插入入口（文档1-41/1-47等插入逻辑）
-void* search(BPlusNode* node, int key);               // 查找键对应的数据（文档1-5：叶节点覆盖所有键）
-int get_min_keys(BPlusNode* node);                    // 计算节点最小键数（文档1-12表格：非根节点min keys）
+void insert(BPlusTree* tree, int key, void* data);    // 插入入口（等插入逻辑）
+void* search(BPlusNode* node, int key);               // 查找键对应的数据（叶节点覆盖所有键）
+int get_min_keys(BPlusNode* node);                    // 计算节点最小键数（非根节点min keys）
 void delete_leaf_key(BPlusNode* node, int idx);       // 删除叶节点的键
 void delete_non_leaf_key(BPlusNode* node, int idx);   // 删除非叶节点的键
-void redistribute_leaf(BPlusNode* parent, int curr_idx); // 从左兄弟 Redistribute（文档1-45：优先左兄弟）
+void redistribute_leaf(BPlusNode* parent, int curr_idx); // 从左兄弟 Redistribute（优先左兄弟）
 void redistribute_leaf_from_right(BPlusNode* parent, int curr_idx); // 从右兄弟 Redistribute
-void merge_leaf(BPlusNode* parent, int curr_idx);     // 合并叶节点与左兄弟（文档1-45：下溢先 Redistribute 再合并）
+void merge_leaf(BPlusNode* parent, int curr_idx);     // 合并叶节点与左兄弟（下溢先 Redistribute 再合并）
 void delete_node(BPlusNode* node, int key);           // 辅助：删除节点内的键（原delete_key拆分，避免root混淆）
 void delete_key(BPlusTree* tree, int key);            // 删除入口（操作BPlusTree，修正root更新问题）
-void traverse_leaves(BPlusNode* root);                // 遍历叶节点（验证文档1-6：叶节点有序）
-// 辅助：分层显示B+树完整结构（直观区分非叶/叶节点，贴合文档1-2/1-3/1-4/1-6规则）
+void traverse_leaves(BPlusNode* root);                // 遍历叶节点（叶节点有序）
+// 辅助：分层显示B+树完整结构（直观区分非叶/叶节点）
 void print_bplus_tree(BPlusTree* tree, const char* operation_desc, FILE* log_file);
 // -------------------------- 函数实现 --------------------------
 // 1. 创建新节点（文档未显式定义，为实现必需）
@@ -81,9 +81,12 @@ void split_leaf(BPlusNode* parent, int index) {
     new_leaf->parent = parent;
     curr_leaf->parent = parent;
 
-
-    // 可以统一为：左节点键数 = (n+1 + 1) / 2（当n为奇数时，(n+1)为偶数；当n为偶数时，(n+1)为奇数，加1后为偶数）
-    int left_key_cnt = (int)ceil((MAX_KEYS+1)/2); // 左节点键数 = (MAX_KEYS+1)/2
+    int left_key_cnt;
+    if (MAX_KEYS % 2 == 1) {  // n为奇数时（如n=3）
+        left_key_cnt = (MAX_KEYS + 1) / 2; // 左节点键数 = (3+1)/2 = 2
+    } else {  // n为偶数时（如n=2）
+        left_key_cnt = ((MAX_KEYS + 1) / 2) + 1; // 左节点键数多1
+    }
 
     // 复制右半键和数据指针到新叶节点（总键数为MAX_KEYS+1）
     new_leaf->key_num = (MAX_KEYS + 1) - left_key_cnt;
@@ -97,6 +100,7 @@ void split_leaf(BPlusNode* parent, int index) {
     curr_leaf->ptrs[MAX_KEYS + 1] = new_leaf;
     curr_leaf->key_num = left_key_cnt;
 
+
     // 父节点插入新键（右节点最小键）
     for (int i = parent->key_num; i > index; i--) {
         parent->keys[i] = parent->keys[i - 1];
@@ -107,30 +111,28 @@ void split_leaf(BPlusNode* parent, int index) {
     parent->key_num++;
 }
 
-// 5. 分裂非叶节点（遵循文档B+树节点的分裂操作：中间键上推）
+// 5. 分裂非叶节点（修正偶数MAX_KEYS的处理）
 void split_non_leaf(BPlusNode* parent, int index) {
     BPlusNode* curr_non_leaf = (BPlusNode*)parent->ptrs[index];
     BPlusNode* new_non_leaf = create_node(0);
     new_non_leaf->parent = parent;
     curr_non_leaf->parent = parent;
 
-    
-    int mid  = (int)ceil((MAX_KEYS + 1) / 2.0);// 使用ceil()函数计算中间索引，统一处理奇数和偶数n
+    int mid;
     int middle_key;
-    if (MAX_KEYS % 2 == 1) {  // n为奇数时（如n=3）
-        // 中间键为右节点第一个键（原节点的mid索引）
-        // mid = (MAX_KEYS + 1) / 2; // 对于n=3，mid=2
-        middle_key = curr_non_leaf->keys[mid]; // 取原节点第mid个键
-    } else {  // n为偶数时（如n=2）
-        // 中间键为左节点最后一个键（原节点的mid-1索引）
-        // mid = ((MAX_KEYS + 1) / 2) + 1; // 对于n=2，mid=2
-        middle_key = curr_non_leaf->keys[mid - 1];
+    if (MAX_KEYS % 2 == 1) {  // 奇数n（如3）
+        mid = (MAX_KEYS + 1) / 2; // 对于n=3，mid=2（划分0~1和3~3）
+        middle_key = curr_non_leaf->keys[mid]; // 中间键为右节点第一个键
+    } else {  // 偶数n（如2）
+        mid = MAX_KEYS / 2; // 修正：对于n=2，mid=1（划分0~0和2~2）
+        middle_key = curr_non_leaf->keys[mid]; // 修正：中间键为左节点最后一个键
     }
 
     // 复制右半键和子节点指针到新非叶节点
-    new_non_leaf->key_num = MAX_KEYS - mid; // 右节点键数 = 总键数(MAX_KEYS+1) - 左节点键数(mid) - 中间键(1)
+    new_non_leaf->key_num = MAX_KEYS - mid; 
+    // 复制右半键和子节点指针（确保索引不越界）
     for (int i = 0; i < new_non_leaf->key_num; i++) {
-        new_non_leaf->keys[i] = curr_non_leaf->keys[mid + 1 + i]; // 跳过中间键
+        new_non_leaf->keys[i] = curr_non_leaf->keys[mid + 1 + i]; // 从中间键右侧开始复制
         new_non_leaf->ptrs[i] = curr_non_leaf->ptrs[mid + 1 + i];
         ((BPlusNode*)new_non_leaf->ptrs[i])->parent = new_non_leaf;
     }
@@ -141,7 +143,7 @@ void split_non_leaf(BPlusNode* parent, int index) {
     // 左节点保留前mid个键（0~mid-1）
     curr_non_leaf->key_num = mid;
 
-    // 父节点插入中间键和新子节点指针
+    // 父节点插入中间键和新子节点指针（原有逻辑正确）
     for (int i = parent->key_num; i > index; i--) {
         parent->keys[i] = parent->keys[i - 1];
         parent->ptrs[i + 1] = parent->ptrs[i];
@@ -161,6 +163,10 @@ void insert_non_full(BPlusNode* node, int key, void* data) {
             node->keys[idx + 1] = node->keys[idx];
             node->ptrs[idx + 1] = node->ptrs[idx];
             idx--;
+        }
+        if (idx + 1 > MAX_KEYS) {
+            fprintf(stderr, "Error: Leaf node data pointer out of bounds!\n");
+            exit(1);
         }
         node->keys[idx + 1] = key;
         node->ptrs[idx + 1] = data;
@@ -239,9 +245,9 @@ int get_min_keys(BPlusNode* node) {
     // 根节点最小1个键
     if (node->parent == NULL) return 1;
     // 叶节点（非根）：min keys = floor((MAX_KEYS+1)/2)
-    if (node->is_leaf) return (int)floor((MAX_KEYS + 1) / 2.0);
+    if (node->is_leaf) return (MAX_KEYS + 1) / 2;
     // 非叶节点（非根）：min keys = ceil((n+1)/2) - 1 = (n+2)/2 - 1
-    return (int)ceil((MAX_KEYS + 1) / 2.0) - 1;
+    return (MAX_KEYS + 2) / 2 - 1;
 }
 
 // 10. 删除叶节点的键（文档1-45：下溢处理前先删除键）
@@ -563,7 +569,7 @@ void print_bplus_tree(BPlusTree* tree, const char* operation_desc, FILE* log_fil
 }
 // -------------------------- 测试主函数（基于文档Question 1插入示例） --------------------------
 int main() {
-    // 1. 初始化B+树（文档1-41：从空树开始）
+    // 1. 初始化B+树（从空树开始）
     BPlusTree tree;
     init_bplus_tree(&tree);
     printf("=== B+ Tree Test (MAX_KEYS = %d) ===\n", MAX_KEYS);
@@ -585,8 +591,10 @@ int main() {
         // 创建操作描述字符串
         char op_desc[100];
         sprintf(op_desc, "Insert key = %d (data = %d)", keys[i], data[i]);
+        // printf("%s\n", op_desc);
         print_bplus_tree(&tree, op_desc, log_file);
     }
+    // print_bplus_tree(&tree, "After all insertions", log_file);
 
     // 3. 查找测试（文档1-5：叶节点覆盖所有键，验证查找功能）
     int key_search = 45;
@@ -597,7 +605,8 @@ int main() {
     } else {
         sprintf(search_desc, "Search key = %d, not found", key_search);
     }
-    print_bplus_tree(&tree, search_desc, log_file);
+    printf("%s\n", search_desc);
+    // print_bplus_tree(&tree, search_desc, log_file);
 
     // // 4. 删除测试（文档1-45：下溢处理规则）
     // int key_delete = 23;
