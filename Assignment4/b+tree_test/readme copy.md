@@ -238,6 +238,57 @@ B+树中节点可以包含的“键”的最大个数为n，n一般在B+初始�
     - 根节点合并：根节点合并后若键数为 0，直接删除根节点，将合并后的子节点作为新根，树高减 1。
     - 多属性键删除：按多属性排序规则定位键值，删除后下溢处理逻辑与单属性一致，仅需确保合并 / 重分配后键值仍按多属性有序。
 
+# B+ 树删除例子解析
+## 当节点中最大key值数量是n=2时，假设已经存在了一个B+树
+    B+树结构 (最大键数 n=2, 树高=3)
+    ------------------------ 第 1 层 ------------------------
+    Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 13, 22] | Point to: [ child=[6,7], child=[20], child=[23] ]
+    ------------------------ 第 2 层 ------------------------
+    Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 6, 7] | Point to: [ child=[2,5], child=6, child=[7,10] ]
+    Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 20, ] | Point to: [ child=[12, 16], child=[20, 21] ]
+    Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 23, ] | Point to: [ child=[22], child=[23] ]
+    ------------------------ 第 3 层 ------------------------
+    Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 2, 5] | Next Point to: [6]
+    Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 6, ] | Next Point to: [7,10]
+    Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 7, 10] | Next Point to: [13,16]
+    Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 13, 16] | Next Point to: [20,21]
+    Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 20, 21] | Next Point to: [22]
+    Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 22, ] | Next Point to: [23]
+    Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 23, ] | Next Point to: [nil]
+    
+    1. delete 13:
+        定位到叶子节点[13(data),16(data)]。
+        delete: 这是一个满节点，删除一个记录后不会导致下溢，直接删除13(data)即可。
+        leaf: 删除后叶子节点分别是[2(data),5(data)],[6(data),],[7(data),10(data)],[16(data),],[20(data),21(data)],[22(data),][23(data),]。
+        parents: 非叶子节点不变，分别是[6,7],[20]和[23]。
+        root: 根节点不变，[13,22]。
+    2. delete 16:
+        定位到叶子节点[16(data)]。
+        delete: 这是一个只有最小Key数量的节点，删除记录16后会导致下溢。下溢时优先尝试向左兄弟借键，但该节点没有左兄弟，于是尝试向右兄弟借键。右兄弟一个Key数量满的节点[20,21]，有能力借出最小键20。于是将20借给原来的16所在位置，变成[20]，右兄弟变成[21]，同时父节点从[20]更新为[21]。
+        leaf: 删除后叶子节点分别是[2(data),5(data)], [6(data),], [7(data),10(data)], [20(data),], [21(data),], [22(data),] [23(data),]。
+        parents: 非叶子节点分别是[6,7],[21](它在删除时被更新了)和[23]。
+        root: 根节点不变，[13,22]。
+    3. delete 20:
+        定位到叶子节点[20(data)]。
+        delete: 这是一个只有最小Key数量的节点，删除记录20后会导致下溢。下溢时优先尝试向左兄弟借键，但该节点没有左兄弟，于是尝试向右兄弟借键。右兄弟一个Key数量为最小值的节点[21]，没有能力借出。于是跨过父节点向左叔叔节点借。左叔叔节点[6,7]有能力借出最大键7。于是将7通过爷爷节点(本例子中的根节点)13所在位置借出，13被7覆盖，爷爷节点(根节点)变成[7,22]，左叔叔节点变成[6]，父节点[21]不变。但是父节点[21]的左孩子节点继承了[7,10]。
+        leaf: 删除后叶子节点分别是[2(data),5(data)], [6(data),], [7(data),10(data)], [21(data),], [22(data),] [23(data),]。
+        parents: 非叶子节点分别是[6,], [7,], [23,]。
+        root: 由于跨根节点借键导致根节点变为[7,22]。
+    4. delete 23:
+        定位到叶子节点[23(data)]。
+        delete: 这是一个只有最小Key数量的节点，删除记录23后会导致下溢。下溢时优先尝试向左兄弟借键，但该节点左兄弟是[22,]没有能力借出，23也没有右兄弟。于是考虑跨过父节点向左叔叔节点借。左叔叔节点[21]没有有能力借出，也没有右叔叔节点。于是考虑合并。
+        merger: 考察爷爷节点(本例中是根节点)，发现它是一个满节点[7,22]，可以拉下来一个键22。于是将22拉下来和原来的左叔叔节点[21]合并。变成[21,22]。
+        leaf: 删除后叶子节点分别是[2(data),5(data)], [6(data),], [7(data),10(data)], [21(data),], [22(data),]。
+        parents: 非叶子节点分别是[6,], [21,22]。
+        root: 由于根节点拉下了一个键22，导致根节点变为[7]。
+    5. delete 7:
+        定位到叶子节点[7(data),10(data)]。
+        delete: 这是一个满节点，直接删除。删除后变成[10(data),]。
+        leaf: 删除后叶子节点分别是[2(data),5(data)], [6(data),], [10(data),] [21(data),], [22(data),]。
+        parents: 非叶子节点分别是[6,], [21,22]。
+        root: 不变，[7]。
+......
+
 ## 删除操作总结：
     - 删除操作最复杂的是删除一个只有最小Key数量的节点，需要考虑下溢处理。
     - 下溢处理包括向左兄弟借键、向右兄弟借键、跨过父节点向左叔叔借键、合并节点。
