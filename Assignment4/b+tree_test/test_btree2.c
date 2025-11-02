@@ -28,7 +28,7 @@ void split_non_leaf(BPlusNode* parent, int index);
 void insert_non_full(BPlusNode* node, int key, void* data);
 void insert(BPlusTree* tree, int key, void* data);
 void* search(BPlusNode* node, int key);
-int get_min_keys(BPlusNode* node); // 修正：传入节点判断是否为根
+int get_min_keys(BPlusNode* node);
 void delete_leaf_key(BPlusNode* node, int idx);
 void delete_non_leaf_key(BPlusNode* node, int idx);
 void redistribute_leaf(BPlusNode* parent, int curr_idx);
@@ -296,7 +296,7 @@ void insert(BPlusTree* tree, int key, void* data) {
     }
 }
 
-// 修复后的搜索函数（核心：移除非叶节点的idx++逻辑）
+// 修复后的搜索函数（核心：正确处理非叶节点的idx指引）
 void* search(BPlusNode* node, int key) {
     if (!node) return NULL;
 
@@ -308,7 +308,12 @@ void* search(BPlusNode* node, int key) {
         }
         return NULL;
     } else {
-        // 非叶节点：直接进入idx对应的子节点（分隔键仅指引范围，不存储数据）
+        // 非叶节点核心规则：
+        // - 若key == keys[idx]：进入ptrs[idx+1]（存储≥key的键）
+        // - 若key < keys[idx]：进入ptrs[idx]（存储<key的键）
+        if (idx < node->key_num && node->keys[idx] == key) {
+            idx++; // 关键修正：等于分隔键时，进入右侧子节点
+        }
         BPlusNode* child = (BPlusNode*)node->ptrs[idx];
         return search(child, key);
     }
@@ -402,21 +407,23 @@ void redistribute_leaf_from_right(BPlusNode* parent, int curr_idx) {
     parent->keys[curr_idx] = right_sib->keys[0];
 }
 
-// 合并叶节点与左兄弟
+// 修复后的合并叶节点（避免合并后键数溢出）
 void merge_leaf(BPlusNode* parent, int curr_idx) {
     if (curr_idx <= 0 || curr_idx > parent->key_num) return; // 防御性检查
 
     BPlusNode* curr = (BPlusNode*)parent->ptrs[curr_idx];
     BPlusNode* left_sib = (BPlusNode*)parent->ptrs[curr_idx - 1];
+    int max_allowed = MAX_KEYS; // 合并后键数不能超过MAX_KEYS
 
-    // 1. 合并父节点的分隔键到左兄弟
-    left_sib->keys[left_sib->key_num] = parent->keys[curr_idx - 1];
-    left_sib->ptrs[left_sib->key_num] = curr->ptrs[0]; // 分隔键对应的数据指针
-    left_sib->key_num++;
+    // 1. 合并父节点的分隔键（仅当左兄弟有空间时）
+    if (left_sib->key_num < max_allowed) {
+        left_sib->keys[left_sib->key_num] = parent->keys[curr_idx - 1];
+        left_sib->ptrs[left_sib->key_num] = curr->ptrs[0]; // 分隔键对应的数据指针
+        left_sib->key_num++;
+    }
 
-    // 2. 合并当前节点的所有键到左兄弟
-    for (int i = 0; i < curr->key_num; i++) {
-        if (left_sib->key_num >= MAX_KEYS + 1) break; // 避免左兄弟溢出
+    // 2. 合并当前节点的键（仅当左兄弟有空间时）
+    for (int i = 0; i < curr->key_num && left_sib->key_num < max_allowed; i++) {
         left_sib->keys[left_sib->key_num] = curr->keys[i];
         left_sib->ptrs[left_sib->key_num] = curr->ptrs[i];
         left_sib->key_num++;
@@ -568,7 +575,7 @@ void print_bplus_tree(BPlusTree* tree, const char* operation_desc, FILE* log_fil
 
 // 测试主函数
 int main() {
-    FILE* log_file = fopen("btree_full_log_fixed.txt", "w");
+    FILE* log_file = fopen("btree_log.txt", "w");
     if (!log_file) {
         perror("无法打开日志文件");
         return 1;
@@ -615,7 +622,7 @@ int main() {
     log_message("=== 查找测试结束 ===\n\n", log_file);
 
     // 删除测试
-    int delete_keys[] = {13, 23, 45, 11, 77}; // 包含一个不存在的键99
+    int delete_keys[] = {13, 23, 45, 11, 77};
     int dk_len = sizeof(delete_keys) / sizeof(delete_keys[0]);
     for (int i = 0; i < dk_len; i++) {
         delete_key(&tree, delete_keys[i]);
