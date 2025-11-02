@@ -1,0 +1,248 @@
+=== 操作: 插入 key=13 (data=111) ===
+B+树结构 (最大键数 n=3, 树高=1, 根节点=0x5c5fc1d6b480)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 13, ] | Pointers: [ data=111, next_leaf=(nil) ]
+
+=== 操作: 插入 key=49 (data=333) ===
+B+树结构 (最大键数 n=3, 树高=1, 根节点=0x5c5fc1d6b480)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 13, 49, ] | Pointers: [ data=111, data=333, next_leaf=(nil) ]
+
+=== 操作: 插入 key=23 (data=222) ===
+B+树结构 (最大键数 n=3, 树高=1, 根节点=0x5c5fc1d6b480)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Leaf Node | Parent Index: -1 | Key Count: 3 | Keys: [ 13, 23, 49, ] | Pointers: [ data=111, data=222, data=333, next_leaf=(nil) ]
+
+=== 操作: 插入 key=45 (data=444) ===
+B+树结构 (最大键数 n=3, 树高=2, 根节点=0x5c5fc1d6c8f0)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 45, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6c940,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 13, 23, ] | Pointers: [ data=111, data=222, next_leaf=0x5c5fc1d6c940 ]
+  Level 2 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 45, 49, ] | Pointers: [ data=444, data=333, next_leaf=(nil) ]
+
+=== 操作: 插入 key=77 (data=555) ===
+B+树结构 (最大键数 n=3, 树高=2, 根节点=0x5c5fc1d6c8f0)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 45, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6c940,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 13, 23, ] | Pointers: [ data=111, data=222, next_leaf=0x5c5fc1d6c940 ]
+  Level 2 | Leaf Node | Parent Index: 1 | Key Count: 3 | Keys: [ 45, 49, 77, ] | Pointers: [ data=444, data=333, data=555, next_leaf=(nil) ]
+
+=== 操作: 插入 key=3 (data=666) ===
+B+树结构 (最大键数 n=3, 树高=2, 根节点=0x5c5fc1d6c8f0)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 45, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6c940,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Leaf Node | Parent Index: 0 | Key Count: 3 | Keys: [ 3, 13, 23, ] | Pointers: [ data=666, data=111, data=222, next_leaf=0x5c5fc1d6c940 ]
+  Level 2 | Leaf Node | Parent Index: 1 | Key Count: 3 | Keys: [ 45, 49, 77, ] | Pointers: [ data=444, data=333, data=555, next_leaf=(nil) ]
+
+=== 操作: 插入 key=29 (data=777) ===
+B+树结构 (最大键数 n=3, 树高=2, 根节点=0x5c5fc1d6c8f0)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 23, 45, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6c990, child=0x5c5fc1d6c940,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 13, ] | Pointers: [ data=666, data=111, next_leaf=0x5c5fc1d6c990 ]
+  Level 2 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 29, ] | Pointers: [ data=222, data=777, next_leaf=0x5c5fc1d6c940 ]
+  Level 2 | Leaf Node | Parent Index: 2 | Key Count: 3 | Keys: [ 45, 49, 77, ] | Pointers: [ data=444, data=333, data=555, next_leaf=(nil) ]
+
+=== 操作: 插入 key=14 (data=888) ===
+B+树结构 (最大键数 n=3, 树高=2, 根节点=0x5c5fc1d6c8f0)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 23, 45, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6c990, child=0x5c5fc1d6c940,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Leaf Node | Parent Index: 0 | Key Count: 3 | Keys: [ 3, 13, 14, ] | Pointers: [ data=666, data=111, data=888, next_leaf=0x5c5fc1d6c990 ]
+  Level 2 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 29, ] | Pointers: [ data=222, data=777, next_leaf=0x5c5fc1d6c940 ]
+  Level 2 | Leaf Node | Parent Index: 2 | Key Count: 3 | Keys: [ 45, 49, 77, ] | Pointers: [ data=444, data=333, data=555, next_leaf=(nil) ]
+
+=== 操作: 插入 key=11 (data=999) ===
+B+树结构 (最大键数 n=3, 树高=2, 根节点=0x5c5fc1d6c8f0)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 3 | Keys: [ 13, 23, 45, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6c9e0, child=0x5c5fc1d6c990, child=0x5c5fc1d6c940,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 11, ] | Pointers: [ data=666, data=999, next_leaf=0x5c5fc1d6c9e0 ]
+  Level 2 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 13, 14, ] | Pointers: [ data=111, data=888, next_leaf=0x5c5fc1d6c990 ]
+  Level 2 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 23, 29, ] | Pointers: [ data=222, data=777, next_leaf=0x5c5fc1d6c940 ]
+  Level 2 | Leaf Node | Parent Index: 3 | Key Count: 3 | Keys: [ 45, 49, 77, ] | Pointers: [ data=444, data=333, data=555, next_leaf=(nil) ]
+
+=== 操作: 插入 key=78 (data=100) ===
+B+树结构 (最大键数 n=3, 树高=3, 根节点=0x5c5fc1d6ca80)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 45, ] | Pointers: [ child=0x5c5fc1d6c8f0, child=0x5c5fc1d6cad0,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 13, 23, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6c9e0, child=0x5c5fc1d6c990,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 77, ] | Pointers: [ child=0x5c5fc1d6c940, child=0x5c5fc1d6ca30,  ]
+------------------------ 第 3 层 ------------------------
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 11, ] | Pointers: [ data=666, data=999, next_leaf=0x5c5fc1d6c9e0 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 13, 14, ] | Pointers: [ data=111, data=888, next_leaf=0x5c5fc1d6c990 ]
+  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 23, 29, ] | Pointers: [ data=222, data=777, next_leaf=0x5c5fc1d6c940 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 45, 49, ] | Pointers: [ data=444, data=333, next_leaf=0x5c5fc1d6ca30 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 77, 78, ] | Pointers: [ data=555, data=100, next_leaf=(nil) ]
+
+=== 操作: 插入 key=30 (data=101) ===
+B+树结构 (最大键数 n=3, 树高=3, 根节点=0x5c5fc1d6ca80)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 45, ] | Pointers: [ child=0x5c5fc1d6c8f0, child=0x5c5fc1d6cad0,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 13, 23, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6c9e0, child=0x5c5fc1d6c990,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 77, ] | Pointers: [ child=0x5c5fc1d6c940, child=0x5c5fc1d6ca30,  ]
+------------------------ 第 3 层 ------------------------
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 11, ] | Pointers: [ data=666, data=999, next_leaf=0x5c5fc1d6c9e0 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 13, 14, ] | Pointers: [ data=111, data=888, next_leaf=0x5c5fc1d6c990 ]
+  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 3 | Keys: [ 23, 29, 30, ] | Pointers: [ data=222, data=777, data=101, next_leaf=0x5c5fc1d6c940 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 45, 49, ] | Pointers: [ data=444, data=333, next_leaf=0x5c5fc1d6ca30 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 77, 78, ] | Pointers: [ data=555, data=100, next_leaf=(nil) ]
+
+=== 操作: 插入 key=40 (data=102) ===
+B+树结构 (最大键数 n=3, 树高=3, 根节点=0x5c5fc1d6ca80)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 45, ] | Pointers: [ child=0x5c5fc1d6c8f0, child=0x5c5fc1d6cad0,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 3 | Keys: [ 13, 23, 30, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6c9e0, child=0x5c5fc1d6c990, child=0x5c5fc1d6cb20,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 77, ] | Pointers: [ child=0x5c5fc1d6c940, child=0x5c5fc1d6ca30,  ]
+------------------------ 第 3 层 ------------------------
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 11, ] | Pointers: [ data=666, data=999, next_leaf=0x5c5fc1d6c9e0 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 13, 14, ] | Pointers: [ data=111, data=888, next_leaf=0x5c5fc1d6c990 ]
+  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 23, 29, ] | Pointers: [ data=222, data=777, next_leaf=0x5c5fc1d6cb20 ]
+  Level 3 | Leaf Node | Parent Index: 3 | Key Count: 2 | Keys: [ 30, 40, ] | Pointers: [ data=101, data=102, next_leaf=0x5c5fc1d6c940 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 45, 49, ] | Pointers: [ data=444, data=333, next_leaf=0x5c5fc1d6ca30 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 77, 78, ] | Pointers: [ data=555, data=100, next_leaf=(nil) ]
+
+=== 操作: 插入 key=4 (data=103) ===
+B+树结构 (最大键数 n=3, 树高=3, 根节点=0x5c5fc1d6ca80)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 45, ] | Pointers: [ child=0x5c5fc1d6c8f0, child=0x5c5fc1d6cad0,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 3 | Keys: [ 13, 23, 30, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6c9e0, child=0x5c5fc1d6c990, child=0x5c5fc1d6cb20,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 77, ] | Pointers: [ child=0x5c5fc1d6c940, child=0x5c5fc1d6ca30,  ]
+------------------------ 第 3 层 ------------------------
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 3 | Keys: [ 3, 4, 11, ] | Pointers: [ data=666, data=103, data=999, next_leaf=0x5c5fc1d6c9e0 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 13, 14, ] | Pointers: [ data=111, data=888, next_leaf=0x5c5fc1d6c990 ]
+  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 23, 29, ] | Pointers: [ data=222, data=777, next_leaf=0x5c5fc1d6cb20 ]
+  Level 3 | Leaf Node | Parent Index: 3 | Key Count: 2 | Keys: [ 30, 40, ] | Pointers: [ data=101, data=102, next_leaf=0x5c5fc1d6c940 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 45, 49, ] | Pointers: [ data=444, data=333, next_leaf=0x5c5fc1d6ca30 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 77, 78, ] | Pointers: [ data=555, data=100, next_leaf=(nil) ]
+
+=== 操作: 插入 key=5 (data=104) ===
+B+树结构 (最大键数 n=3, 树高=3, 根节点=0x5c5fc1d6ca80)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 23, 45, ] | Pointers: [ child=0x5c5fc1d6c8f0, child=0x5c5fc1d6cbc0, child=0x5c5fc1d6cad0,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 5, 13, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6cb70, child=0x5c5fc1d6c9e0,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 30, ] | Pointers: [ child=0x5c5fc1d6c990, child=0x5c5fc1d6cb20,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 77, ] | Pointers: [ child=0x5c5fc1d6c940, child=0x5c5fc1d6ca30,  ]
+------------------------ 第 3 层 ------------------------
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4, ] | Pointers: [ data=666, data=103, next_leaf=0x5c5fc1d6cb70 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 5, 11, ] | Pointers: [ data=104, data=999, next_leaf=0x5c5fc1d6c9e0 ]
+  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 13, 14, ] | Pointers: [ data=111, data=888, next_leaf=0x5c5fc1d6c990 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 23, 29, ] | Pointers: [ data=222, data=777, next_leaf=0x5c5fc1d6cb20 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 30, 40, ] | Pointers: [ data=101, data=102, next_leaf=0x5c5fc1d6c940 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 45, 49, ] | Pointers: [ data=444, data=333, next_leaf=0x5c5fc1d6ca30 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 77, 78, ] | Pointers: [ data=555, data=100, next_leaf=(nil) ]
+
+=== 操作: 插入 key=15 (data=105) ===
+B+树结构 (最大键数 n=3, 树高=3, 根节点=0x5c5fc1d6ca80)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 23, 45, ] | Pointers: [ child=0x5c5fc1d6c8f0, child=0x5c5fc1d6cbc0, child=0x5c5fc1d6cad0,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 5, 13, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6cb70, child=0x5c5fc1d6c9e0,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 30, ] | Pointers: [ child=0x5c5fc1d6c990, child=0x5c5fc1d6cb20,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 77, ] | Pointers: [ child=0x5c5fc1d6c940, child=0x5c5fc1d6ca30,  ]
+------------------------ 第 3 层 ------------------------
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4, ] | Pointers: [ data=666, data=103, next_leaf=0x5c5fc1d6cb70 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 5, 11, ] | Pointers: [ data=104, data=999, next_leaf=0x5c5fc1d6c9e0 ]
+  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 3 | Keys: [ 13, 14, 15, ] | Pointers: [ data=111, data=888, data=105, next_leaf=0x5c5fc1d6c990 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 23, 29, ] | Pointers: [ data=222, data=777, next_leaf=0x5c5fc1d6cb20 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 30, 40, ] | Pointers: [ data=101, data=102, next_leaf=0x5c5fc1d6c940 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 45, 49, ] | Pointers: [ data=444, data=333, next_leaf=0x5c5fc1d6ca30 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 77, 78, ] | Pointers: [ data=555, data=100, next_leaf=(nil) ]
+
+=== 操作: 插入 key=16 (data=106) ===
+B+树结构 (最大键数 n=3, 树高=3, 根节点=0x5c5fc1d6ca80)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 23, 45, ] | Pointers: [ child=0x5c5fc1d6c8f0, child=0x5c5fc1d6cbc0, child=0x5c5fc1d6cad0,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 3 | Keys: [ 5, 13, 15, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6cb70, child=0x5c5fc1d6c9e0, child=0x5c5fc1d6cc10,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 30, ] | Pointers: [ child=0x5c5fc1d6c990, child=0x5c5fc1d6cb20,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 77, ] | Pointers: [ child=0x5c5fc1d6c940, child=0x5c5fc1d6ca30,  ]
+------------------------ 第 3 层 ------------------------
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4, ] | Pointers: [ data=666, data=103, next_leaf=0x5c5fc1d6cb70 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 5, 11, ] | Pointers: [ data=104, data=999, next_leaf=0x5c5fc1d6c9e0 ]
+  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 13, 14, ] | Pointers: [ data=111, data=888, next_leaf=0x5c5fc1d6cc10 ]
+  Level 3 | Leaf Node | Parent Index: 3 | Key Count: 2 | Keys: [ 15, 16, ] | Pointers: [ data=105, data=106, next_leaf=0x5c5fc1d6c990 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 23, 29, ] | Pointers: [ data=222, data=777, next_leaf=0x5c5fc1d6cb20 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 30, 40, ] | Pointers: [ data=101, data=102, next_leaf=0x5c5fc1d6c940 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 45, 49, ] | Pointers: [ data=444, data=333, next_leaf=0x5c5fc1d6ca30 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 77, 78, ] | Pointers: [ data=555, data=100, next_leaf=(nil) ]
+
+=== 查找 key=13 === 未找到
+
+=== 查找 key=23 === 未找到
+
+=== 查找 key=77 === 未找到
+
+=== 查找 key=29 === 找到, data=777
+
+=== 查找 key=11 === 找到, data=999
+
+=== 查找 key=30 === 未找到
+
+=== 查找 key=4 === 找到, data=103
+
+=== 查找 key=15 === 未找到
+
+=== 查找 key=99 === 未找到
+
+=== 操作: 删除 key=23 ===
+B+树结构 (最大键数 n=3, 树高=3, 根节点=0x5c5fc1d6ca80)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 23, 45, ] | Pointers: [ child=0x5c5fc1d6c8f0, child=0x5c5fc1d6cbc0, child=0x5c5fc1d6cad0,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 3 | Keys: [ 5, 13, 15, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6cb70, child=0x5c5fc1d6c9e0, child=0x5c5fc1d6cc10,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 30, ] | Pointers: [ child=0x5c5fc1d6c990, child=0x5c5fc1d6cb20,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 77, ] | Pointers: [ child=0x5c5fc1d6c940, child=0x5c5fc1d6ca30,  ]
+------------------------ 第 3 层 ------------------------
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4, ] | Pointers: [ data=666, data=103, next_leaf=0x5c5fc1d6cb70 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 5, 11, ] | Pointers: [ data=104, data=999, next_leaf=0x5c5fc1d6c9e0 ]
+  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 13, 14, ] | Pointers: [ data=111, data=888, next_leaf=0x5c5fc1d6cc10 ]
+  Level 3 | Leaf Node | Parent Index: 3 | Key Count: 2 | Keys: [ 15, 16, ] | Pointers: [ data=105, data=106, next_leaf=0x5c5fc1d6c990 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 29, ] | Pointers: [ data=777, next_leaf=0x5c5fc1d6cb20 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 30, 40, ] | Pointers: [ data=101, data=102, next_leaf=0x5c5fc1d6c940 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 45, 49, ] | Pointers: [ data=444, data=333, next_leaf=0x5c5fc1d6ca30 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 77, 78, ] | Pointers: [ data=555, data=100, next_leaf=(nil) ]
+
+=== 操作: 删除 key=45 ===
+B+树结构 (最大键数 n=3, 树高=3, 根节点=0x5c5fc1d6ca80)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 23, 45, ] | Pointers: [ child=0x5c5fc1d6c8f0, child=0x5c5fc1d6cbc0, child=0x5c5fc1d6cad0,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 3 | Keys: [ 5, 13, 15, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6cb70, child=0x5c5fc1d6c9e0, child=0x5c5fc1d6cc10,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 30, ] | Pointers: [ child=0x5c5fc1d6c990, child=0x5c5fc1d6cb20,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 77, ] | Pointers: [ child=0x5c5fc1d6c940, child=0x5c5fc1d6ca30,  ]
+------------------------ 第 3 层 ------------------------
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4, ] | Pointers: [ data=666, data=103, next_leaf=0x5c5fc1d6cb70 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 5, 11, ] | Pointers: [ data=104, data=999, next_leaf=0x5c5fc1d6c9e0 ]
+  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 13, 14, ] | Pointers: [ data=111, data=888, next_leaf=0x5c5fc1d6cc10 ]
+  Level 3 | Leaf Node | Parent Index: 3 | Key Count: 2 | Keys: [ 15, 16, ] | Pointers: [ data=105, data=106, next_leaf=0x5c5fc1d6c990 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 29, ] | Pointers: [ data=777, next_leaf=0x5c5fc1d6cb20 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 30, 40, ] | Pointers: [ data=101, data=102, next_leaf=0x5c5fc1d6c940 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 49, ] | Pointers: [ data=333, next_leaf=0x5c5fc1d6ca30 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 77, 78, ] | Pointers: [ data=555, data=100, next_leaf=(nil) ]
+
+=== 操作: 删除 key=11 ===
+B+树结构 (最大键数 n=3, 树高=3, 根节点=0x5c5fc1d6ca80)
+------------------------ 第 1 层 ------------------------
+  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 23, 45, ] | Pointers: [ child=0x5c5fc1d6c8f0, child=0x5c5fc1d6cbc0, child=0x5c5fc1d6cad0,  ]
+------------------------ 第 2 层 ------------------------
+  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 13, 15, ] | Pointers: [ child=0x5c5fc1d6b480, child=0x5c5fc1d6c9e0, child=0x5c5fc1d6cc10,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 30, ] | Pointers: [ child=0x5c5fc1d6c990, child=0x5c5fc1d6cb20,  ]
+  Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 77, ] | Pointers: [ child=0x5c5fc1d6c940, child=0x5c5fc1d6ca30,  ]
+------------------------ 第 3 层 ------------------------
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 4 | Keys: [ 3, 4, 5, 5, ] | Pointers: [ data=666, data=103, data=104, data=104, next_leaf=0x5c5fc1d6c9e0 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 13, 14, ] | Pointers: [ data=111, data=888, next_leaf=0x5c5fc1d6cc10 ]
+  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 15, 16, ] | Pointers: [ data=105, data=106, next_leaf=0x5c5fc1d6c990 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 29, ] | Pointers: [ data=777, next_leaf=0x5c5fc1d6cb20 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 30, 40, ] | Pointers: [ data=101, data=102, next_leaf=0x5c5fc1d6c940 ]
+  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 49, ] | Pointers: [ data=333, next_leaf=0x5c5fc1d6ca30 ]
+  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 77, 78, ] | Pointers: [ data=555, data=100, next_leaf=(nil) ]
+
