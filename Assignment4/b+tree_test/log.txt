@@ -18,7 +18,7 @@ Max Keys per node (n) = 3 | Level: Root = Level 1
 Level 1 | Leaf Node (Parent idx: -1) | Keys: 3 | [ key=13 (data=111) key=23 (data=222) key=49 (data=333) ] | Next Leaf: NULL
 === End of B+ Tree Structure ===
 
-=== Operation: Insert key = 45 (data = 444) ===
+=== Operation: Insert key = 45 (data = 444) ===  
 === B+ Tree Structure ===
 Max Keys per node (n) = 3 | Level: Root = Level 1
 Level 1 | Non-Leaf Node (Parent idx: -1) | Keys: 1 | [ key=45 ] | Children (count: 2): [ 0x55add65372a0 0x55add6538940 ]
