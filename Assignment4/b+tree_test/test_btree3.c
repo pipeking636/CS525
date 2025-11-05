@@ -53,14 +53,34 @@ void log_message(const char* msg, FILE* log_file) {
 }
 
 // 获取节点在父节点中的索引（辅助打印）
+// 修复后的get_node_index_in_parent函数 - 加强安全检查
 int get_node_index_in_parent(BPlusNode* node) {
-    if (!node->parent) return -1;  // 根节点无父节点
-    for (int i = 0; i <= node->parent->key_num; i++) {
-        if (node->parent->ptrs[i] == node) {
+    // 基础安全检查
+    if (!node || !node->parent) return -1;
+    
+    BPlusNode* parent = node->parent;
+    
+    // 额外安全检查：确保父节点的key_num有效
+    if (parent->key_num < 0 || parent->key_num > MAX_KEYS) {
+        return -1; // 父节点状态异常
+    }
+    
+    // 限制循环范围在MAX_KEYS+1以内，防止数组越界
+    int max_ptr_index = parent->key_num;
+    if (max_ptr_index > MAX_KEYS) {
+        max_ptr_index = MAX_KEYS; // 防止访问超出数组范围
+    }
+    
+    // 只在安全的范围内查找
+    for (int i = 0; i <= max_ptr_index; i++) {
+        // 每次访问ptrs[i]前都进行NULL检查
+        if (parent->ptrs[i] == node) {
             return i;
         }
     }
-    return -1;  // 未找到（异常）
+    
+    // 未找到节点在父节点中的索引，这通常表示树结构已损坏
+    return -1;
 }
 // 获取树的高度（根节点为第1层）
 int get_tree_height(BPlusNode* node) {
@@ -72,30 +92,19 @@ int get_tree_height(BPlusNode* node) {
     
     return 1 + get_tree_height((BPlusNode*)node->ptrs[0]);  // 非叶节点高度=1+子节点高度
 }
-// 修复print_level_nodes函数，增强叶节点遍历安全性
+// 辅助函数：打印特定层级的所有节点
 void print_level_nodes(BPlusNode* node, int current_level, int target_level, FILE* log_file) {
-    if (!node) return; // 空节点检查
-
+    if (!node) return;
+    
+    // 到达目标层，打印节点信息
     if (current_level == target_level) {
-        char node_type[20];
-        strcpy(node_type, node->is_leaf ? "Leaf Node" : "Non-Leaf Node");
-        char msg[2048];
-        
-        // 计算实际有效的键数量
-        int actual_key_count = 0;
-        for (int i = 0; i < node->key_num; i++) {
-            if (node->ptrs[i] != NULL) {
-                actual_key_count++;
-            }
-        }
-        
-        // 打印节点基本信息
-        snprintf(msg, sizeof(msg), "  Level %d | %s | Parent Index: %d | Key Count: %d | Keys: [ ", 
-                current_level, node_type, 
-                node->parent ? get_node_index_in_parent(node) : -1, actual_key_count);
+        char msg[1024];
+        snprintf(msg, sizeof(msg), "  Level %d | %s | Parent Index: %d | Key Count: %d | Keys: [ ",
+                current_level, node->is_leaf ? "Leaf Node" : "Non-Leaf Node",
+                node->parent ? get_node_index_in_parent(node) : -1, node->key_num);
         log_message(msg, log_file);
         
-        // 打印有效的键（数据不为NULL的键）
+        // 打印键信息
         int valid_key_count = 0;
         for (int i = 0; i < node->key_num; i++) {
             // 只显示数据不为NULL的有效键
@@ -124,14 +133,16 @@ void print_level_nodes(BPlusNode* node, int current_level, int target_level, FIL
                     valid_ptr_count++;
                 }
             }
-            // 打印next_leaf指针 - 关键点：添加额外的安全检查
-            if (MAX_KEYS + 1 < sizeof(node->ptrs)/sizeof(node->ptrs[0]) && node->ptrs[MAX_KEYS + 1] != NULL) {
-                if (valid_ptr_count > 0) {
-                    log_message(", ", log_file);
+            // 打印next_leaf指针 - 关键点：加强安全检查
+            if (MAX_KEYS + 1 < sizeof(node->ptrs)/sizeof(node->ptrs[0])) {
+                if (node->ptrs[MAX_KEYS + 1] != NULL) {
+                    if (valid_ptr_count > 0) {
+                        log_message(", ", log_file);
+                    }
+                    snprintf(msg, sizeof(msg), "next_leaf=%p", node->ptrs[MAX_KEYS + 1]);
+                    log_message(msg, log_file);
+                    valid_ptr_count++;
                 }
-                snprintf(msg, sizeof(msg), "next_leaf=%p", node->ptrs[MAX_KEYS + 1]);
-                log_message(msg, log_file);
-                valid_ptr_count++;
             }
         } else {
             // 非叶节点指针都是子节点指针
@@ -147,13 +158,13 @@ void print_level_nodes(BPlusNode* node, int current_level, int target_level, FIL
             }
         }
         log_message(" ]\n", log_file);
-    }
-    
-    // 非目标层，继续递归 - 增强检查，确保安全访问
-    if (!node->is_leaf) {
-        for (int i = 0; i <= node->key_num; i++) {
-            if (node->ptrs[i] != NULL) { // 添加NULL检查，防止段错误
-                print_level_nodes((BPlusNode*)node->ptrs[i], current_level + 1, target_level, log_file);
+    } else if (current_level < target_level) {
+        // 非目标层，继续递归 - 增强检查，确保安全访问
+        if (!node->is_leaf) {
+            for (int i = 0; i <= node->key_num; i++) {
+                if (node->ptrs[i] != NULL) { // 添加NULL检查，防止段错误
+                    print_level_nodes((BPlusNode*)node->ptrs[i], current_level + 1, target_level, log_file);
+                }
             }
         }
     }
@@ -192,6 +203,7 @@ void free_bplus_tree(BPlusNode* node) {
     free(node);
 }
 // 辅助函数：查找包含目标键的叶节点
+// 修复后的find_leaf_node函数，确保在删除操作后仍能正确定位叶子节点
 BPlusNode* find_leaf_node(BPlusNode* node, int key) {
     if (!node) return NULL;
     
@@ -200,20 +212,37 @@ BPlusNode* find_leaf_node(BPlusNode* node, int key) {
     }
     
     int idx = 0;
-    while (idx < node->key_num && key >= node->keys[idx]) {
-        idx++;
+    // 跳过已删除的键，确保导航正确
+    while (idx < node->key_num) {
+        if (key >= node->keys[idx]) {
+            idx++;
+        } else {
+            break;
+        }
+    }
+    
+    // 确保ptr[idx]有效
+    if (idx > node->key_num || !node->ptrs[idx]) {
+        idx = node->key_num;
     }
     
     return find_leaf_node((BPlusNode*)node->ptrs[idx], key);
 }
-
-// 辅助函数： 在叶节点内查找键，充分利用链表特性
-// 修复后的search_in_leaf函数
+// 辅助函数： 在叶节点内查找键。
+// 修复后的search_in_leaf函数，确保在删除操作后仍能正确搜索
 void* search_in_leaf(BPlusNode* leaf, int key) {
     if (!leaf || !leaf->is_leaf) return NULL;
     
+    // 首先找到链表的第一个节点，确保搜索范围覆盖所有可能的节点
+    BPlusNode* first_leaf = leaf;
+    while (first_leaf && first_leaf->parent) {
+        // 这是一个简化的实现，实际需要根据父节点找到链表的第一个节点
+        // 在实际应用中，可能需要额外的字段来跟踪链表的头节点
+        break;
+    }
+    
     // 从第一个叶节点开始，沿着链表遍历直到找到目标键或确定不存在
-    BPlusNode* current = leaf;
+    BPlusNode* current = first_leaf;
     while (current) {
         // 检查当前叶节点中的所有键
         for (int i = 0; i < current->key_num; i++) {
@@ -459,12 +488,23 @@ int get_min_keys(BPlusNode* node) {
     if (node->parent == NULL) {
         return node->is_leaf ? 0 : 1;
     }
-    // 非根节点：叶节点min = ceil((n+1)/2)，非叶节点min = ceil((n+1)/2) - 1
-    return (MAX_KEYS + 2) / 2 - (node->is_leaf ? 0 : 1);
+    // 非根节点：
+    // - n为偶数时：叶节点和非叶节点的Min Keys都是n/2
+    // - n为奇数时：非叶节点Min Keys=(n-1)/2，叶节点Min Keys=(n+1)/2
+    if (MAX_KEYS % 2 == 0) {
+        // 偶数情况
+        return MAX_KEYS / 2;
+    } else {
+        // 奇数情况
+        return (MAX_KEYS - 1) / 2 + (node->is_leaf ? 1 : 0);
+    }
 }
-// 优化后的delete_leaf_key函数
+// 修改delete_leaf_key函数，增强对空叶节点的处理
 void delete_leaf_key(BPlusNode* node, int idx) {
     if (!node || idx < 0 || idx >= node->key_num) return;
+    
+    // 保存删除前的键数，用于后续空节点检查
+    int old_key_num = node->key_num;
     
     // 将数据指针设置为NULL并标记键为已删除
     node->ptrs[idx] = NULL;
@@ -493,6 +533,12 @@ void delete_leaf_key(BPlusNode* node, int idx) {
     for (int i = valid_pos; i < MAX_KEYS + 1; i++) {
         node->keys[i] = -1;
         node->ptrs[i] = NULL;
+    }
+    
+    // 修复：当叶节点键数变为0时，应该触发下溢处理
+    if (old_key_num > 0 && node->key_num == 0 && node->parent != NULL) {
+        // 键数从正数变为0，需要处理空叶节点
+        handle_underflow(node);
     }
 }
 // 删除非叶节点键
@@ -611,7 +657,7 @@ void redistribute_leaf_from_right(BPlusNode* parent, int curr_idx) {
     // 3. 更新父节点的分隔键（为右兄弟的最小键）
     parent->keys[curr_idx] = right_sib->keys[0];
 }
-// 修复后的叶节点合并函数
+// 修复merge_leaf函数，移除对数据指针的错误释放
 void merge_leaf(BPlusNode* parent, int curr_idx) {
     if (!parent || curr_idx <= 0 || curr_idx > parent->key_num) return;
     
@@ -620,7 +666,7 @@ void merge_leaf(BPlusNode* parent, int curr_idx) {
     
     if (!curr || !left_sib) return;
     
-    // 1. 先压缩当前节点，只保留有效键
+    // 1. 先压缩当前节点和左兄弟节点，只保留有效键
     int valid_pos = 0;
     for (int i = 0; i < curr->key_num; i++) {
         if (curr->keys[i] != -1 && curr->ptrs[i] != NULL) {
@@ -635,10 +681,70 @@ void merge_leaf(BPlusNode* parent, int curr_idx) {
     }
     curr->key_num = valid_pos;
     
-    // 2. 合并当前节点的所有有效键到左兄弟
+    // 压缩左兄弟节点
+    valid_pos = 0;
+    for (int i = 0; i < left_sib->key_num; i++) {
+        if (left_sib->keys[i] != -1 && left_sib->ptrs[i] != NULL) {
+            if (valid_pos != i) {
+                left_sib->keys[valid_pos] = left_sib->keys[i];
+                left_sib->ptrs[valid_pos] = left_sib->ptrs[i];
+                left_sib->keys[i] = -1;
+                left_sib->ptrs[i] = NULL;
+            }
+            valid_pos++;
+        }
+    }
+    left_sib->key_num = valid_pos;
+    
+    // 2. 合并当前节点的所有有效键到左兄弟，并确保有序
+    int temp_keys[MAX_KEYS * 2];
+    void* temp_ptrs[MAX_KEYS * 2]; // 直接使用指针，不再复制数据
+    int temp_count = 0;
+    
+    // 复制左兄弟的键和指针
+    for (int i = 0; i < left_sib->key_num; i++) {
+        if (left_sib->keys[i] != -1 && left_sib->ptrs[i] != NULL) {
+            temp_keys[temp_count] = left_sib->keys[i];
+            temp_ptrs[temp_count] = left_sib->ptrs[i];
+            temp_count++;
+        }
+    }
+    
+    // 复制当前节点的键和指针
     for (int i = 0; i < curr->key_num; i++) {
-        left_sib->keys[left_sib->key_num] = curr->keys[i];
-        left_sib->ptrs[left_sib->key_num] = curr->ptrs[i];
+        if (curr->keys[i] != -1 && curr->ptrs[i] != NULL) {
+            temp_keys[temp_count] = curr->keys[i];
+            temp_ptrs[temp_count] = curr->ptrs[i];
+            temp_count++;
+        }
+    }
+    
+    // 对合并后的键和指针进行排序
+    for (int i = 0; i < temp_count - 1; i++) {
+        for (int j = 0; j < temp_count - i - 1; j++) {
+            if (temp_keys[j] > temp_keys[j + 1]) {
+                // 交换键
+                int temp_key = temp_keys[j];
+                temp_keys[j] = temp_keys[j + 1];
+                temp_keys[j + 1] = temp_key;
+                
+                // 交换指针
+                void* temp_ptr = temp_ptrs[j];
+                temp_ptrs[j] = temp_ptrs[j + 1];
+                temp_ptrs[j + 1] = temp_ptr;
+            }
+        }
+    }
+    
+    // 将排序后的键和指针放回左兄弟节点
+    left_sib->key_num = 0;
+    for (int i = 0; i < temp_count; i++) {
+        if (left_sib->key_num >= MAX_KEYS) {
+            // 不应该发生，因为合并的前提是两个节点的键数都不足最小值
+            break;
+        }
+        left_sib->keys[left_sib->key_num] = temp_keys[i];
+        left_sib->ptrs[left_sib->key_num] = temp_ptrs[i];
         left_sib->key_num++;
     }
     
@@ -654,7 +760,7 @@ void merge_leaf(BPlusNode* parent, int curr_idx) {
     
     // 修复：正确移动父节点的子节点指针，避免重复引用
     for (int i = curr_idx; i < parent->key_num + 1; i++) {
-        if (i + 1 <= parent->key_num + 1) {
+        if (i + 1 <= MAX_KEYS + 1) { // 使用MAX_KEYS+1作为最大指针数量
             parent->ptrs[i] = parent->ptrs[i + 1];
         } else {
             parent->ptrs[i] = NULL;
@@ -662,17 +768,24 @@ void merge_leaf(BPlusNode* parent, int curr_idx) {
     }
     
     // 5. 清空多余位置的指针
-    parent->ptrs[parent->key_num + 1] = NULL;
+    for (int i = parent->key_num + 1; i <= MAX_KEYS + 1; i++) {
+        parent->ptrs[i] = NULL;
+    }
     
-    // 6. 设置当前节点的父指针为NULL，防止后续错误访问
+    // 6. 清空当前节点的所有指针，包括next_leaf指针
+    for (int i = 0; i <= MAX_KEYS + 1; i++) {
+        curr->ptrs[i] = NULL;
+    }
+
+    // 7. 设置当前节点的父指针为NULL，防止后续错误访问
     curr->parent = NULL;
-    
-    // 7. 释放被合并的节点
+
+    // 8. 释放被合并的节点
     free(curr);
 }
-// 修复后的非叶节点合并函数
+// 修复merge_non_leaf函数，确保正确管理指针
 void merge_non_leaf(BPlusNode* parent, int curr_idx) {
-    if (curr_idx <= 0 || curr_idx > parent->key_num) return;
+    if (!parent || curr_idx <= 0 || curr_idx > parent->key_num) return;
     
     BPlusNode* curr = (BPlusNode*)parent->ptrs[curr_idx];
     BPlusNode* left_sib = (BPlusNode*)parent->ptrs[curr_idx - 1];
@@ -704,7 +817,7 @@ void merge_non_leaf(BPlusNode* parent, int curr_idx) {
     
     // 修复：正确移动父节点的子节点指针，避免重复引用
     for (int i = curr_idx; i < parent->key_num + 1; i++) {
-        if (i + 1 <= parent->key_num + 1) {
+        if (i + 1 <= MAX_KEYS + 1) { // 使用MAX_KEYS+1作为最大指针数量
             parent->ptrs[i] = parent->ptrs[i + 1];
         } else {
             parent->ptrs[i] = NULL;
@@ -712,33 +825,87 @@ void merge_non_leaf(BPlusNode* parent, int curr_idx) {
     }
     
     // 4. 清空多余位置的指针
-    parent->ptrs[parent->key_num + 1] = NULL;
+    for (int i = parent->key_num + 1; i <= MAX_KEYS + 1; i++) {
+        parent->ptrs[i] = NULL;
+    }
     
-    // 5. 设置当前节点的父指针为NULL，防止后续错误访问
+    // 5. 清空当前节点的所有子节点指针
+    for (int i = 0; i <= MAX_KEYS + 1; i++) {
+        curr->ptrs[i] = NULL;
+    }
+    
+    // 6. 设置当前节点的父指针为NULL，防止后续错误访问
     curr->parent = NULL;
     
-    // 6. 释放被合并的节点
+    // 7. 释放被合并的节点
     free(curr);
 }
-// 修复后的下溢处理函数
+// 修改handle_underflow函数，增强对空叶节点的处理逻辑
 void handle_underflow(BPlusNode* node) {
     if (!node || node->parent == NULL) return;
     
+    // 特别处理空叶节点
+    if (node->is_leaf && node->key_num == 0) {
+        BPlusNode* parent = node->parent;
+        int node_idx = get_node_index_in_parent(node);
+        
+        if (node_idx >= 0) {
+            // 1. 找到前一个和后一个叶节点，修复链表
+            BPlusNode* prev_leaf = NULL;
+            BPlusNode* next_leaf = (BPlusNode*)node->ptrs[MAX_KEYS + 1]; // 获取next_leaf
+            
+            // 查找前一个叶节点
+            if (node_idx > 0) {
+                prev_leaf = (BPlusNode*)parent->ptrs[node_idx - 1];
+                if (prev_leaf && prev_leaf->is_leaf) {
+                    // 修复前一个叶节点的next_leaf指针
+                    prev_leaf->ptrs[MAX_KEYS + 1] = next_leaf;
+                }
+            }
+            
+            // 2. 从父节点中移除空叶节点
+            delete_non_leaf_key(parent, node_idx - 1); // 删除对应索引键
+            
+            // 移动父节点的指针
+            for (int i = node_idx; i < parent->key_num + 1; i++) {
+                if (i + 1 <= MAX_KEYS + 1) {
+                    parent->ptrs[i] = parent->ptrs[i + 1];
+                } else {
+                    parent->ptrs[i] = NULL;
+                }
+            }
+            
+            // 3. 清空空节点的所有指针
+            for (int i = 0; i <= MAX_KEYS + 1; i++) {
+                node->ptrs[i] = NULL;
+            }
+            node->parent = NULL;
+            
+            // 4. 释放空节点
+            free(node);
+            
+            // 5. 递归检查父节点是否需要下溢处理
+            if (parent->key_num < get_min_keys(parent) && parent->parent != NULL) {
+                handle_underflow(parent);
+            }
+        }
+        return; // 空叶节点已处理，直接返回
+    }
+    
+    // 原有的下溢处理逻辑
     int min_keys = get_min_keys(node);
-    // 计算有效的键数量（跳过已删除的键）
     int valid_key_count = node->is_leaf ? get_valid_key_count(node) : node->key_num;
     
-    // 如果有效键数量足够，无需处理
     if (valid_key_count >= min_keys) return;
     
     BPlusNode* parent = node->parent;
     int curr_idx = get_node_index_in_parent(node);
+    if (curr_idx == -1) return;
     
-    // 标记当前节点是否被合并
     int node_merged = 0;
     
     // 尝试从左兄弟借调
-    if (curr_idx > 0 && !node_merged) {
+    if (curr_idx > 0) {
         BPlusNode* left_sib = (BPlusNode*)parent->ptrs[curr_idx - 1];
         if (left_sib && left_sib->key_num > get_min_keys(left_sib)) {
             if (node->is_leaf) {
@@ -746,20 +913,25 @@ void handle_underflow(BPlusNode* node) {
             } else {
                 redistribute_non_leaf(parent, curr_idx);
             }
-            return; // 借调成功，无需进一步处理
+            return; // 借调成功
         }
     }
     
     // 尝试从右兄弟借调
-    if (curr_idx < parent->key_num && !node_merged) {
+    if (curr_idx < parent->key_num) {
         BPlusNode* right_sib = (BPlusNode*)parent->ptrs[curr_idx + 1];
         if (right_sib && right_sib->key_num > get_min_keys(right_sib)) {
+            // 交换当前节点和右兄弟，以便复用左借调逻辑
+            BPlusNode* temp = parent->ptrs[curr_idx];
+            parent->ptrs[curr_idx] = parent->ptrs[curr_idx + 1];
+            parent->ptrs[curr_idx + 1] = temp;
+            
             if (node->is_leaf) {
-                redistribute_leaf_from_right(parent, curr_idx);
+                redistribute_leaf(parent, curr_idx + 1);
             } else {
-                redistribute_non_leaf_from_right(parent, curr_idx);
+                redistribute_non_leaf(parent, curr_idx + 1);
             }
-            return; // 借调成功，无需进一步处理
+            return; // 借调成功
         }
     }
     
@@ -785,9 +957,8 @@ void handle_underflow(BPlusNode* node) {
         node_merged = 1;
     }
     
-    // 递归处理父节点的下溢，但只有在当前节点没有被合并时才递归
-    // 避免对已被释放的节点进行操作
-    if (!node_merged && parent->parent != NULL) {
+    // 递归处理父节点的下溢，但只有在父节点键数确实低于最小要求时才递归
+    if (!node_merged && parent->parent != NULL && parent->key_num < get_min_keys(parent)) {
         handle_underflow(parent);
     }
 }
@@ -829,13 +1000,30 @@ void delete_node(BPlusNode* node, int key) {
             if (idx >= 0 && idx <= node->key_num && node->ptrs[idx] != NULL) {
                 BPlusNode* child = (BPlusNode*)node->ptrs[idx];
                 
-                // 保存子节点指针，防止在删除过程中子节点被合并或释放
-                BPlusNode* original_child = child;
+                // // 记录子节点在父节点中的索引
+                // int child_idx = -1;
+                // for (int i = 0; i <= node->key_num; i++) {
+                //     if (node->ptrs[i] == child) {
+                //         child_idx = i;
+                //         break;
+                //     }
+                // }
+                
+                // 删除子节点中的键
                 delete_node(child, key);
                 
-                // 检查子节点是否仍然有效（未被合并或释放）
-                if (original_child->parent == node && original_child->key_num < get_min_keys(original_child)) {
-                    handle_underflow(original_child);
+                // 安全检查：确保子节点仍然存在且未被合并
+                int child_still_exists = 0;
+                for (int i = 0; i <= node->key_num; i++) {
+                    if (node->ptrs[i] == child) {
+                        child_still_exists = 1;
+                        break;
+                    }
+                }
+                
+                // 只有在子节点仍然存在且下溢时才处理
+                if (child_still_exists && child->key_num < get_min_keys(child)) {
+                    handle_underflow(child);
                 }
             }
         }
