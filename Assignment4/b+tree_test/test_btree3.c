@@ -1122,15 +1122,27 @@ int main() {
         log_message(msg, 0);
     }
 
-    
     // 删除测试
     console_log("开始删除测试...\n");
-    int delete_keys[] = {13, 23, 45, 11, 77};
+    int delete_keys[] = {13, 23, 45, 11, 77, 27, 30, 40};
     int dk_len = sizeof(delete_keys) / sizeof(delete_keys[0]);
     for (int i = 0; i < dk_len; i++) {
         delete_key(&tree, delete_keys[i]);
     }
     console_log("删除测试完成\n");
+
+    // 删除后再插入测试
+    console_log("开始删除后再插入测试...\n");
+    int reinsert_keys[] = {27, 30, 40};
+    int reinsert_data[] = {327, 330, 340};
+    int rk_len = sizeof(reinsert_keys) / sizeof(reinsert_keys[0]);
+    for (int i = 0; i < rk_len; i++) {
+        insert(&tree, reinsert_keys[i], &reinsert_data[i]);
+        char desc[128];
+        snprintf(desc, sizeof(desc), "插入 key=%d (data=%d)", reinsert_keys[i], reinsert_data[i]);
+        print_bplus_tree(&tree, desc, 0); // 0表示不输出到终端
+    }
+    console_log("删除后再插入测试完成\n");
 
     fclose(log_file);
     // 释放B+树内存
