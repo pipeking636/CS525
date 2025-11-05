@@ -1,240 +1,586 @@
 === 操作: 插入 key=13 (data=111) ===
-B+树结构 (最大键数 n=2, 树高=1, 根节点=0x614db894e480)
+B+树结构 (最大键数 n=2, 树高=1, 根节点=0x62169bdd3480)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ data=111 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [13]
+
 
 === 操作: 插入 key=49 (data=333) ===
-B+树结构 (最大键数 n=2, 树高=1, 根节点=0x614db894e480)
+B+树结构 (最大键数 n=2, 树高=1, 根节点=0x62169bdd3480)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 13, 49 ] | Pointers: [ data=111, data=333 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: (nil), 父索引: -1
+键: [13, 49]
+
 
 === 操作: 插入 key=23 (data=222) ===
-B+树结构 (最大键数 n=2, 树高=2, 根节点=0x614db894f8f0)
+B+树结构 (最大键数 n=2, 树高=2, 根节点=0x62169bdd48f0)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 49 ] | Pointers: [ child=0x614db894e480, child=0x614db894f940 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [49]
+子节点指针: [0x62169bdd3480, 0x62169bdd4940]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 13, 23 ] | Pointers: [ data=111, data=222, next_leaf=0x614db894f940 ]
-  Level 2 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 49 ] | Pointers: [ data=333 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [13, 23]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [49]
+
 
 === 操作: 插入 key=45 (data=444) ===
-B+树结构 (最大键数 n=2, 树高=2, 根节点=0x614db894f8f0)
+B+树结构 (最大键数 n=2, 树高=2, 根节点=0x62169bdd48f0)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 45, 49 ] | Pointers: [ child=0x614db894e480, child=0x614db894f990, child=0x614db894f940 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 2, 父节点: (nil), 父索引: -1
+键: [45, 49]
+子节点指针: [0x62169bdd3480, 0x62169bdd4990, 0x62169bdd4940]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 13, 23 ] | Pointers: [ data=111, data=222, next_leaf=0x614db894f990 ]
-  Level 2 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 2 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 49 ] | Pointers: [ data=333 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [13, 23]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 2
+键: [49]
+
 
 === 操作: 插入 key=77 (data=555) ===
-B+树结构 (最大键数 n=2, 树高=2, 根节点=0x614db894f8f0)
+B+树结构 (最大键数 n=2, 树高=2, 根节点=0x62169bdd48f0)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 45, 49 ] | Pointers: [ child=0x614db894e480, child=0x614db894f990, child=0x614db894f940 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 2, 父节点: (nil), 父索引: -1
+键: [45, 49]
+子节点指针: [0x62169bdd3480, 0x62169bdd4990, 0x62169bdd4940]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 13, 23 ] | Pointers: [ data=111, data=222, next_leaf=0x614db894f990 ]
-  Level 2 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 2 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [13, 23]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 2
+键: [49, 77]
+
 
 === 操作: 插入 key=3 (data=666) ===
-B+树结构 (最大键数 n=2, 树高=3, 根节点=0x614db894fa30)
+B+树结构 (最大键数 n=2, 树高=3, 根节点=0x62169bdd4a30)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [45]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4a80]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 23 ] | Pointers: [ child=0x614db894e480, child=0x614db894f9e0 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 49 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [23]
+子节点指针: [0x62169bdd3480, 0x62169bdd49e0]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [49]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 13 ] | Pointers: [ data=666, data=111, next_leaf=0x614db894f9e0 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 23 ] | Pointers: [ data=222, next_leaf=0x614db894f990 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 13]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [23]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
 
 === 操作: 插入 key=29 (data=777) ===
-B+树结构 (最大键数 n=2, 树高=3, 根节点=0x614db894fa30)
+B+树结构 (最大键数 n=2, 树高=3, 根节点=0x62169bdd4a30)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [45]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4a80]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 23 ] | Pointers: [ child=0x614db894e480, child=0x614db894f9e0 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 49 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [23]
+子节点指针: [0x62169bdd3480, 0x62169bdd49e0]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [49]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 13 ] | Pointers: [ data=666, data=111, next_leaf=0x614db894f9e0 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 29 ] | Pointers: [ data=222, data=777, next_leaf=0x614db894f990 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 13]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [23, 29]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
 
 === 操作: 插入 key=14 (data=888) ===
-B+树结构 (最大键数 n=2, 树高=3, 根节点=0x614db894fa30)
+B+树结构 (最大键数 n=2, 树高=3, 根节点=0x62169bdd4a30)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [45]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4a80]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 14, 23 ] | Pointers: [ child=0x614db894e480, child=0x614db894fad0, child=0x614db894f9e0 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 49 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [14, 23]
+子节点指针: [0x62169bdd3480, 0x62169bdd4ad0, 0x62169bdd49e0]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [49]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 13 ] | Pointers: [ data=666, data=111, next_leaf=0x614db894fad0 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ data=888, next_leaf=0x614db894f9e0 ]
-  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 23, 29 ] | Pointers: [ data=222, data=777, next_leaf=0x614db894f990 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 13]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [14]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 2
+键: [23, 29]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
 
 === 操作: 插入 key=11 (data=999) ===
-B+树结构 (最大键数 n=2, 树高=3, 根节点=0x614db894fa30)
+B+树结构 (最大键数 n=2, 树高=3, 根节点=0x62169bdd4a30)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 14, 45 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fb70, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 2, 父节点: (nil), 父索引: -1
+键: [14, 45]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4b70, 0x62169bdd4a80]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ child=0x614db894e480, child=0x614db894fb20 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 23 ] | Pointers: [ child=0x614db894fad0, child=0x614db894f9e0 ]
-  Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 49 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [13]
+子节点指针: [0x62169bdd3480, 0x62169bdd4b20]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [23]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd49e0]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 2
+键: [49]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 11 ] | Pointers: [ data=666, data=999, next_leaf=0x614db894fb20 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ data=111, next_leaf=0x614db894fad0 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ data=888, next_leaf=0x614db894f9e0 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 29 ] | Pointers: [ data=222, data=777, next_leaf=0x614db894f990 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 11]
+
+节点地址: 0x62169bdd4b20, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [13]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [23, 29]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
 
 === 操作: 插入 key=78 (data=100) ===
-B+树结构 (最大键数 n=2, 树高=3, 根节点=0x614db894fa30)
+B+树结构 (最大键数 n=2, 树高=3, 根节点=0x62169bdd4a30)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 14, 45 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fb70, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 2, 父节点: (nil), 父索引: -1
+键: [14, 45]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4b70, 0x62169bdd4a80]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ child=0x614db894e480, child=0x614db894fb20 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 23 ] | Pointers: [ child=0x614db894fad0, child=0x614db894f9e0 ]
-  Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 49, 78 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940, child=0x614db894fbc0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [13]
+子节点指针: [0x62169bdd3480, 0x62169bdd4b20]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [23]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd49e0]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 2
+键: [49, 78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940, 0x62169bdd4bc0]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 11 ] | Pointers: [ data=666, data=999, next_leaf=0x614db894fb20 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ data=111, next_leaf=0x614db894fad0 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ data=888, next_leaf=0x614db894f9e0 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 29 ] | Pointers: [ data=222, data=777, next_leaf=0x614db894f990 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555, next_leaf=0x614db894fbc0 ]
-  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ data=100 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 11]
+
+节点地址: 0x62169bdd4b20, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [13]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [23, 29]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 2
+键: [78]
+
 
 === 操作: 插入 key=30 (data=101) ===
-B+树结构 (最大键数 n=2, 树高=3, 根节点=0x614db894fa30)
+B+树结构 (最大键数 n=2, 树高=3, 根节点=0x62169bdd4a30)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 14, 45 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fb70, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 2, 父节点: (nil), 父索引: -1
+键: [14, 45]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4b70, 0x62169bdd4a80]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ child=0x614db894e480, child=0x614db894fb20 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 30 ] | Pointers: [ child=0x614db894fad0, child=0x614db894f9e0, child=0x614db894fc10 ]
-  Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 49, 78 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940, child=0x614db894fbc0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [13]
+子节点指针: [0x62169bdd3480, 0x62169bdd4b20]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [23, 30]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd49e0, 0x62169bdd4c10]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 2
+键: [49, 78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940, 0x62169bdd4bc0]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 11 ] | Pointers: [ data=666, data=999, next_leaf=0x614db894fb20 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ data=111, next_leaf=0x614db894fad0 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ data=888, next_leaf=0x614db894f9e0 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 29 ] | Pointers: [ data=222, data=777, next_leaf=0x614db894fc10 ]
-  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 30 ] | Pointers: [ data=101, next_leaf=0x614db894f990 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555, next_leaf=0x614db894fbc0 ]
-  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ data=100 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 11]
+
+节点地址: 0x62169bdd4b20, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [13]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [23, 29]
+
+节点地址: 0x62169bdd4c10, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 2
+键: [30]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 2
+键: [78]
+
 
 === 操作: 插入 key=40 (data=102) ===
-B+树结构 (最大键数 n=2, 树高=3, 根节点=0x614db894fa30)
+B+树结构 (最大键数 n=2, 树高=3, 根节点=0x62169bdd4a30)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 14, 45 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fb70, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 2, 父节点: (nil), 父索引: -1
+键: [14, 45]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4b70, 0x62169bdd4a80]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ child=0x614db894e480, child=0x614db894fb20 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 30 ] | Pointers: [ child=0x614db894fad0, child=0x614db894f9e0, child=0x614db894fc10 ]
-  Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 49, 78 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940, child=0x614db894fbc0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [13]
+子节点指针: [0x62169bdd3480, 0x62169bdd4b20]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [23, 30]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd49e0, 0x62169bdd4c10]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 2
+键: [49, 78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940, 0x62169bdd4bc0]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 11 ] | Pointers: [ data=666, data=999, next_leaf=0x614db894fb20 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ data=111, next_leaf=0x614db894fad0 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ data=888, next_leaf=0x614db894f9e0 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 29 ] | Pointers: [ data=222, data=777, next_leaf=0x614db894fc10 ]
-  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 30, 40 ] | Pointers: [ data=101, data=102, next_leaf=0x614db894f990 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555, next_leaf=0x614db894fbc0 ]
-  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ data=100 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 11]
+
+节点地址: 0x62169bdd4b20, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [13]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [23, 29]
+
+节点地址: 0x62169bdd4c10, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 2
+键: [30, 40]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 2
+键: [78]
+
 
 === 操作: 插入 key=4 (data=103) ===
-B+树结构 (最大键数 n=2, 树高=3, 根节点=0x614db894fa30)
+B+树结构 (最大键数 n=2, 树高=3, 根节点=0x62169bdd4a30)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 14, 45 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fb70, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 2, 父节点: (nil), 父索引: -1
+键: [14, 45]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4b70, 0x62169bdd4a80]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 11, 13 ] | Pointers: [ child=0x614db894e480, child=0x614db894fc60, child=0x614db894fb20 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 30 ] | Pointers: [ child=0x614db894fad0, child=0x614db894f9e0, child=0x614db894fc10 ]
-  Level 2 | Non-Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 49, 78 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940, child=0x614db894fbc0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [11, 13]
+子节点指针: [0x62169bdd3480, 0x62169bdd4c60, 0x62169bdd4b20]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [23, 30]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd49e0, 0x62169bdd4c10]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 2
+键: [49, 78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940, 0x62169bdd4bc0]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4 ] | Pointers: [ data=666, data=103, next_leaf=0x614db894fc60 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 11 ] | Pointers: [ data=999, next_leaf=0x614db894fb20 ]
-  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ data=111, next_leaf=0x614db894fad0 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ data=888, next_leaf=0x614db894f9e0 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 29 ] | Pointers: [ data=222, data=777, next_leaf=0x614db894fc10 ]
-  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 30, 40 ] | Pointers: [ data=101, data=102, next_leaf=0x614db894f990 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555, next_leaf=0x614db894fbc0 ]
-  Level 3 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ data=100 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 4]
+
+节点地址: 0x62169bdd4c60, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [11]
+
+节点地址: 0x62169bdd4b20, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 2
+键: [13]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [23, 29]
+
+节点地址: 0x62169bdd4c10, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 2
+键: [30, 40]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 2
+键: [78]
+
 
 === 操作: 插入 key=5 (data=104) ===
-B+树结构 (最大键数 n=2, 树高=4, 根节点=0x614db894fd50)
+B+树结构 (最大键数 n=2, 树高=4, 根节点=0x62169bdd4d50)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ child=0x614db894fa30, child=0x614db894fda0 ]
+节点地址: 0x62169bdd4d50, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [14]
+子节点指针: [0x62169bdd4a30, 0x62169bdd4da0]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 11 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fd00 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ child=0x614db894fb70, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 0
+键: [11]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4d00]
+
+节点地址: 0x62169bdd4da0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 1
+键: [45]
+子节点指针: [0x62169bdd4b70, 0x62169bdd4a80]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 5 ] | Pointers: [ child=0x614db894e480, child=0x614db894fcb0 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ child=0x614db894fc60, child=0x614db894fb20 ]
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 23, 30 ] | Pointers: [ child=0x614db894fad0, child=0x614db894f9e0, child=0x614db894fc10 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 78 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940, child=0x614db894fbc0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [5]
+子节点指针: [0x62169bdd3480, 0x62169bdd4cb0]
+
+节点地址: 0x62169bdd4d00, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [13]
+子节点指针: [0x62169bdd4c60, 0x62169bdd4b20]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4da0, 父索引: 0
+键: [23, 30]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd49e0, 0x62169bdd4c10]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4da0, 父索引: 1
+键: [49, 78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940, 0x62169bdd4bc0]
+
 ------------------------ 第 4 层 ------------------------
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4 ] | Pointers: [ data=666, data=103, next_leaf=0x614db894fcb0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 5 ] | Pointers: [ data=104, next_leaf=0x614db894fc60 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 11 ] | Pointers: [ data=999, next_leaf=0x614db894fb20 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ data=111, next_leaf=0x614db894fad0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ data=888, next_leaf=0x614db894f9e0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 29 ] | Pointers: [ data=222, data=777, next_leaf=0x614db894fc10 ]
-  Level 4 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 30, 40 ] | Pointers: [ data=101, data=102, next_leaf=0x614db894f990 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555, next_leaf=0x614db894fbc0 ]
-  Level 4 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ data=100 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 4]
+
+节点地址: 0x62169bdd4cb0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [5]
+
+节点地址: 0x62169bdd4c60, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4d00, 父索引: 0
+键: [11]
+
+节点地址: 0x62169bdd4b20, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4d00, 父索引: 1
+键: [13]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [23, 29]
+
+节点地址: 0x62169bdd4c10, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 2
+键: [30, 40]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 2
+键: [78]
+
 
 === 操作: 插入 key=15 (data=105) ===
-B+树结构 (最大键数 n=2, 树高=4, 根节点=0x614db894fd50)
+B+树结构 (最大键数 n=2, 树高=4, 根节点=0x62169bdd4d50)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ child=0x614db894fa30, child=0x614db894fda0 ]
+节点地址: 0x62169bdd4d50, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [14]
+子节点指针: [0x62169bdd4a30, 0x62169bdd4da0]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 11 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fd00 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ child=0x614db894fb70, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 0
+键: [11]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4d00]
+
+节点地址: 0x62169bdd4da0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 1
+键: [45]
+子节点指针: [0x62169bdd4b70, 0x62169bdd4a80]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 5 ] | Pointers: [ child=0x614db894e480, child=0x614db894fcb0 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ child=0x614db894fc60, child=0x614db894fb20 ]
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 23, 30 ] | Pointers: [ child=0x614db894fad0, child=0x614db894f9e0, child=0x614db894fc10 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 78 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940, child=0x614db894fbc0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [5]
+子节点指针: [0x62169bdd3480, 0x62169bdd4cb0]
+
+节点地址: 0x62169bdd4d00, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [13]
+子节点指针: [0x62169bdd4c60, 0x62169bdd4b20]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4da0, 父索引: 0
+键: [23, 30]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd49e0, 0x62169bdd4c10]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4da0, 父索引: 1
+键: [49, 78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940, 0x62169bdd4bc0]
+
 ------------------------ 第 4 层 ------------------------
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4 ] | Pointers: [ data=666, data=103, next_leaf=0x614db894fcb0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 5 ] | Pointers: [ data=104, next_leaf=0x614db894fc60 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 11 ] | Pointers: [ data=999, next_leaf=0x614db894fb20 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ data=111, next_leaf=0x614db894fad0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 14, 15 ] | Pointers: [ data=888, data=105, next_leaf=0x614db894f9e0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 29 ] | Pointers: [ data=222, data=777, next_leaf=0x614db894fc10 ]
-  Level 4 | Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 30, 40 ] | Pointers: [ data=101, data=102, next_leaf=0x614db894f990 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555, next_leaf=0x614db894fbc0 ]
-  Level 4 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ data=100 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 4]
+
+节点地址: 0x62169bdd4cb0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [5]
+
+节点地址: 0x62169bdd4c60, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4d00, 父索引: 0
+键: [11]
+
+节点地址: 0x62169bdd4b20, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4d00, 父索引: 1
+键: [13]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14, 15]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [23, 29]
+
+节点地址: 0x62169bdd4c10, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 2
+键: [30, 40]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 2
+键: [78]
+
 
 === 操作: 插入 key=16 (data=106) ===
-B+树结构 (最大键数 n=2, 树高=4, 根节点=0x614db894fd50)
+B+树结构 (最大键数 n=2, 树高=4, 根节点=0x62169bdd4d50)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ child=0x614db894fa30, child=0x614db894fda0 ]
+节点地址: 0x62169bdd4d50, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [14]
+子节点指针: [0x62169bdd4a30, 0x62169bdd4da0]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 11 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fd00 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 23, 45 ] | Pointers: [ child=0x614db894fb70, child=0x614db894fe40, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 0
+键: [11]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4d00]
+
+节点地址: 0x62169bdd4da0, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4d50, 父索引: 1
+键: [23, 45]
+子节点指针: [0x62169bdd4b70, 0x62169bdd4e40, 0x62169bdd4a80]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 5 ] | Pointers: [ child=0x614db894e480, child=0x614db894fcb0 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ child=0x614db894fc60, child=0x614db894fb20 ]
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ child=0x614db894fad0, child=0x614db894fdf0 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 30 ] | Pointers: [ child=0x614db894f9e0, child=0x614db894fc10 ]
-  Level 3 | Non-Leaf Node | Parent Index: 2 | Key Count: 2 | Keys: [ 49, 78 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940, child=0x614db894fbc0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [5]
+子节点指针: [0x62169bdd3480, 0x62169bdd4cb0]
+
+节点地址: 0x62169bdd4d00, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [13]
+子节点指针: [0x62169bdd4c60, 0x62169bdd4b20]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4da0, 父索引: 0
+键: [16]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd4df0]
+
+节点地址: 0x62169bdd4e40, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4da0, 父索引: 1
+键: [30]
+子节点指针: [0x62169bdd49e0, 0x62169bdd4c10]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4da0, 父索引: 2
+键: [49, 78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940, 0x62169bdd4bc0]
+
 ------------------------ 第 4 层 ------------------------
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4 ] | Pointers: [ data=666, data=103, next_leaf=0x614db894fcb0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 5 ] | Pointers: [ data=104, next_leaf=0x614db894fc60 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 11 ] | Pointers: [ data=999, next_leaf=0x614db894fb20 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 13 ] | Pointers: [ data=111, next_leaf=0x614db894fad0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 14, 15 ] | Pointers: [ data=888, data=105, next_leaf=0x614db894fdf0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ data=106, next_leaf=0x614db894f9e0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 23, 29 ] | Pointers: [ data=222, data=777, next_leaf=0x614db894fc10 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 30, 40 ] | Pointers: [ data=101, data=102, next_leaf=0x614db894f990 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555, next_leaf=0x614db894fbc0 ]
-  Level 4 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ data=100 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 4]
+
+节点地址: 0x62169bdd4cb0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [5]
+
+节点地址: 0x62169bdd4c60, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4d00, 父索引: 0
+键: [11]
+
+节点地址: 0x62169bdd4b20, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4d00, 父索引: 1
+键: [13]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14, 15]
+
+节点地址: 0x62169bdd4df0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [16]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4e40, 父索引: 0
+键: [23, 29]
+
+节点地址: 0x62169bdd4c10, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4e40, 父索引: 1
+键: [30, 40]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 2
+键: [78]
+
 
 === 开始查找测试 ===
 === 查找 key=13 === 找到, data=111
@@ -257,120 +603,343 @@ B+树结构 (最大键数 n=2, 树高=4, 根节点=0x614db894fd50)
 === 查找测试结束 ===
 
 === 操作: 删除 key=13 ===
-B+树结构 (最大键数 n=2, 树高=4, 根节点=0x614db894fd50)
+删除叶子节点键 13 成功，剩余键数量: 0
+叶子节点发生下溢，准备处理
+合并叶节点，左侧节点键数量: 1
+合并非叶节点，左侧节点键数量: 2
+从右侧兄弟节点重分配键到非叶节点，当前节点键数量: 1
+=== 操作: 删除后的树结构 ===
+B+树结构 (最大键数 n=2, 树高=4, 根节点=0x62169bdd4d50)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 23 ] | Pointers: [ child=0x614db894fa30, child=0x614db894fda0 ]
+节点地址: 0x62169bdd4d50, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [23]
+子节点指针: [0x62169bdd4a30, 0x62169bdd4da0]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fb70 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ child=0x614db894fe40, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 0
+键: [14]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4b70]
+
+节点地址: 0x62169bdd4da0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 1
+键: [45]
+子节点指针: [0x62169bdd4e40, 0x62169bdd4a80]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 5, 11 ] | Pointers: [ child=0x614db894e480, child=0x614db894fcb0, child=0x614db894fc60 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ child=0x614db894fad0, child=0x614db894fdf0 ]
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 30 ] | Pointers: [ child=0x614db894f9e0, child=0x614db894fc10 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 78 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940, child=0x614db894fbc0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [5, 11]
+子节点指针: [0x62169bdd3480, 0x62169bdd4cb0, 0x62169bdd4c60]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [16]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd4df0]
+
+节点地址: 0x62169bdd4e40, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4da0, 父索引: 0
+键: [30]
+子节点指针: [0x62169bdd49e0, 0x62169bdd4c10]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4da0, 父索引: 1
+键: [49, 78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940, 0x62169bdd4bc0]
+
 ------------------------ 第 4 层 ------------------------
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4 ] | Pointers: [ data=666, data=103, next_leaf=0x614db894fcb0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 5 ] | Pointers: [ data=104, next_leaf=0x614db894fc60 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 11 ] | Pointers: [ data=999, next_leaf=0x614db894fad0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 14, 15 ] | Pointers: [ data=888, data=105, next_leaf=0x614db894fdf0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ data=106, next_leaf=0x614db894f9e0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 23, 29 ] | Pointers: [ data=222, data=777, next_leaf=0x614db894fc10 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 30, 40 ] | Pointers: [ data=101, data=102, next_leaf=0x614db894f990 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555, next_leaf=0x614db894fbc0 ]
-  Level 4 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ data=100 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 4]
+
+节点地址: 0x62169bdd4cb0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [5]
+
+节点地址: 0x62169bdd4c60, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 2
+键: [11]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14, 15]
+
+节点地址: 0x62169bdd4df0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [16]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4e40, 父索引: 0
+键: [23, 29]
+
+节点地址: 0x62169bdd4c10, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4e40, 父索引: 1
+键: [30, 40]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 2
+键: [78]
+
 
 === 验证删除 key=13 === 已删除（正常）
-
 === 操作: 删除 key=23 ===
-B+树结构 (最大键数 n=2, 树高=4, 根节点=0x614db894fd50)
+删除叶子节点键 23 成功，剩余键数量: 1
+=== 操作: 删除后的树结构 ===
+B+树结构 (最大键数 n=2, 树高=4, 根节点=0x62169bdd4d50)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 23 ] | Pointers: [ child=0x614db894fa30, child=0x614db894fda0 ]
+节点地址: 0x62169bdd4d50, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [23]
+子节点指针: [0x62169bdd4a30, 0x62169bdd4da0]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fb70 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ child=0x614db894fe40, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 0
+键: [14]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4b70]
+
+节点地址: 0x62169bdd4da0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 1
+键: [45]
+子节点指针: [0x62169bdd4e40, 0x62169bdd4a80]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 5, 11 ] | Pointers: [ child=0x614db894e480, child=0x614db894fcb0, child=0x614db894fc60 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ child=0x614db894fad0, child=0x614db894fdf0 ]
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 0 | Keys: [  ] | Pointers: [ child=0x614db894fc10 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 78 ] | Pointers: [ child=0x614db894f990, child=0x614db894f940, child=0x614db894fbc0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [5, 11]
+子节点指针: [0x62169bdd3480, 0x62169bdd4cb0, 0x62169bdd4c60]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [16]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd4df0]
+
+节点地址: 0x62169bdd4e40, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4da0, 父索引: 0
+键: [30]
+子节点指针: [0x62169bdd49e0, 0x62169bdd4c10]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4da0, 父索引: 1
+键: [49, 78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940, 0x62169bdd4bc0]
+
 ------------------------ 第 4 层 ------------------------
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4 ] | Pointers: [ data=666, data=103, next_leaf=0x614db894fcb0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 5 ] | Pointers: [ data=104, next_leaf=0x614db894fc60 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 11 ] | Pointers: [ data=999, next_leaf=0x614db894fad0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 14, 15 ] | Pointers: [ data=888, data=105, next_leaf=0x614db894fdf0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ data=106, next_leaf=0x614db894f9e0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 3 | Keys: [ 30, 40, 29 ] | Pointers: [ data=101, data=102, data=777, next_leaf=0x614db894fc10 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ data=444, next_leaf=0x614db894f940 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555, next_leaf=0x614db894fbc0 ]
-  Level 4 | Leaf Node | Parent Index: 2 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ data=100 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 4]
+
+节点地址: 0x62169bdd4cb0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [5]
+
+节点地址: 0x62169bdd4c60, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 2
+键: [11]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14, 15]
+
+节点地址: 0x62169bdd4df0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [16]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4e40, 父索引: 0
+键: [29]
+
+节点地址: 0x62169bdd4c10, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4e40, 父索引: 1
+键: [30, 40]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [45]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [49, 77]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 2
+键: [78]
+
 
 === 验证删除 key=23 === 已删除（正常）
-
 === 操作: 删除 key=45 ===
-B+树结构 (最大键数 n=2, 树高=4, 根节点=0x614db894fd50)
+删除叶子节点键 45 成功，剩余键数量: 0
+叶子节点发生下溢，准备处理
+从右侧兄弟节点重分配键到叶节点，当前节点键数量: 1
+=== 操作: 删除后的树结构 ===
+B+树结构 (最大键数 n=2, 树高=4, 根节点=0x62169bdd4d50)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 23 ] | Pointers: [ child=0x614db894fa30, child=0x614db894fda0 ]
+节点地址: 0x62169bdd4d50, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [23]
+子节点指针: [0x62169bdd4a30, 0x62169bdd4da0]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fb70 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ child=0x614db894fe40, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 0
+键: [14]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4b70]
+
+节点地址: 0x62169bdd4da0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 1
+键: [45]
+子节点指针: [0x62169bdd4e40, 0x62169bdd4a80]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 5, 11 ] | Pointers: [ child=0x614db894e480, child=0x614db894fcb0, child=0x614db894fc60 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ child=0x614db894fad0, child=0x614db894fdf0 ]
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 0 | Keys: [  ] | Pointers: [ child=0x614db894fc10 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ child=0x614db894f940, child=0x614db894fbc0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [5, 11]
+子节点指针: [0x62169bdd3480, 0x62169bdd4cb0, 0x62169bdd4c60]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [16]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd4df0]
+
+节点地址: 0x62169bdd4e40, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4da0, 父索引: 0
+键: [30]
+子节点指针: [0x62169bdd49e0, 0x62169bdd4c10]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4da0, 父索引: 1
+键: [77, 78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940, 0x62169bdd4bc0]
+
 ------------------------ 第 4 层 ------------------------
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4 ] | Pointers: [ data=666, data=103, next_leaf=0x614db894fcb0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 5 ] | Pointers: [ data=104, next_leaf=0x614db894fc60 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 11 ] | Pointers: [ data=999, next_leaf=0x614db894fad0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 14, 15 ] | Pointers: [ data=888, data=105, next_leaf=0x614db894fdf0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ data=106, next_leaf=0x614db894f9e0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 3 | Keys: [ 30, 40, 29 ] | Pointers: [ data=101, data=102, data=777, next_leaf=0x614db894fc10 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555, next_leaf=0x614db894f940 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ data=100 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 4]
+
+节点地址: 0x62169bdd4cb0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [5]
+
+节点地址: 0x62169bdd4c60, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 2
+键: [11]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14, 15]
+
+节点地址: 0x62169bdd4df0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [16]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4e40, 父索引: 0
+键: [29]
+
+节点地址: 0x62169bdd4c10, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4e40, 父索引: 1
+键: [30, 40]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [49]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [77]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 2
+键: [78]
+
 
 === 验证删除 key=45 === 已删除（正常）
-
 === 操作: 删除 key=11 ===
-B+树结构 (最大键数 n=2, 树高=4, 根节点=0x614db894fd50)
+删除叶子节点键 11 成功，剩余键数量: 0
+叶子节点发生下溢，准备处理
+合并叶节点，左侧节点键数量: 1
+=== 操作: 删除后的树结构 ===
+B+树结构 (最大键数 n=2, 树高=4, 根节点=0x62169bdd4d50)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 1 | Keys: [ 23 ] | Pointers: [ child=0x614db894fa30, child=0x614db894fda0 ]
+节点地址: 0x62169bdd4d50, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [23]
+子节点指针: [0x62169bdd4a30, 0x62169bdd4da0]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 1 | Keys: [ 14 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fb70 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 45 ] | Pointers: [ child=0x614db894fe40, child=0x614db894fa80 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 0
+键: [14]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4b70]
+
+节点地址: 0x62169bdd4da0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 1
+键: [45]
+子节点指针: [0x62169bdd4e40, 0x62169bdd4a80]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 5, 11 ] | Pointers: [ child=0x614db894e480, child=0x614db894fcb0, child=0x614db894fc60 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ child=0x614db894fad0, child=0x614db894fdf0 ]
-  Level 3 | Non-Leaf Node | Parent Index: 0 | Key Count: 0 | Keys: [  ] | Pointers: [ child=0x614db894fc10 ]
-  Level 3 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ child=0x614db894f940, child=0x614db894fbc0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [5]
+子节点指针: [0x62169bdd3480, 0x62169bdd4cb0]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [16]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd4df0]
+
+节点地址: 0x62169bdd4e40, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4da0, 父索引: 0
+键: [30]
+子节点指针: [0x62169bdd49e0, 0x62169bdd4c10]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 2, 父节点: 0x62169bdd4da0, 父索引: 1
+键: [77, 78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4940, 0x62169bdd4bc0]
+
 ------------------------ 第 4 层 ------------------------
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4 ] | Pointers: [ data=666, data=103, next_leaf=0x614db894fcb0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 5 ] | Pointers: [ data=104, next_leaf=0x614db894fc60 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 0 | Keys: [  ] | Pointers: [ next_leaf=0x614db894fad0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 14, 15 ] | Pointers: [ data=888, data=105, next_leaf=0x614db894fdf0 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ data=106, next_leaf=0x614db894f9e0 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 3 | Keys: [ 30, 40, 29 ] | Pointers: [ data=101, data=102, data=777, next_leaf=0x614db894fc10 ]
-  Level 4 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 49, 77 ] | Pointers: [ data=333, data=555, next_leaf=0x614db894f940 ]
-  Level 4 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 78 ] | Pointers: [ data=100 ]
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 4]
+
+节点地址: 0x62169bdd4cb0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [5]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14, 15]
+
+节点地址: 0x62169bdd4df0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [16]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4e40, 父索引: 0
+键: [29]
+
+节点地址: 0x62169bdd4c10, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4e40, 父索引: 1
+键: [30, 40]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [49]
+
+节点地址: 0x62169bdd4940, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [77]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 2
+键: [78]
+
 
 === 验证删除 key=11 === 已删除（正常）
-
 === 操作: 删除 key=77 ===
-B+树结构 (最大键数 n=2, 树高=3, 根节点=0x614db894fa30)
+删除叶子节点键 77 成功，剩余键数量: 0
+叶子节点发生下溢，准备处理
+合并叶节点，左侧节点键数量: 1
+=== 操作: 删除后的树结构 ===
+B+树结构 (最大键数 n=2, 树高=4, 根节点=0x62169bdd4d50)
 ------------------------ 第 1 层 ------------------------
-  Level 1 | Non-Leaf Node | Parent Index: -1 | Key Count: 2 | Keys: [ 14, 23 ] | Pointers: [ child=0x614db894f8f0, child=0x614db894fb70, child=0x614db894fb70 ]
+节点地址: 0x62169bdd4d50, 类型: 非叶节点, 键数量: 1, 父节点: (nil), 父索引: -1
+键: [23]
+子节点指针: [0x62169bdd4a30, 0x62169bdd4da0]
+
 ------------------------ 第 2 层 ------------------------
-  Level 2 | Non-Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 5, 11 ] | Pointers: [ child=0x614db894e480, child=0x614db894fcb0, child=0x614db894fc60 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ child=0x614db894fad0, child=0x614db894fdf0 ]
-  Level 2 | Non-Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ child=0x614db894fad0, child=0x614db894fdf0 ]
+节点地址: 0x62169bdd4a30, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 0
+键: [14]
+子节点指针: [0x62169bdd48f0, 0x62169bdd4b70]
+
+节点地址: 0x62169bdd4da0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4d50, 父索引: 1
+键: [45]
+子节点指针: [0x62169bdd4e40, 0x62169bdd4a80]
+
 ------------------------ 第 3 层 ------------------------
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 3, 4 ] | Pointers: [ data=666, data=103, next_leaf=0x614db894fcb0 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 5 ] | Pointers: [ data=104, next_leaf=0x614db894fc60 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 0 | Keys: [  ] | Pointers: [ next_leaf=0x614db894fad0 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 14, 15 ] | Pointers: [ data=888, data=105, next_leaf=0x614db894fdf0 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ data=106, next_leaf=0x614db894f9e0 ]
-  Level 3 | Leaf Node | Parent Index: 0 | Key Count: 2 | Keys: [ 14, 15 ] | Pointers: [ data=888, data=105, next_leaf=0x614db894fdf0 ]
-  Level 3 | Leaf Node | Parent Index: 1 | Key Count: 1 | Keys: [ 16 ] | Pointers: [ data=106, next_leaf=0x614db894f9e0 ]
+节点地址: 0x62169bdd48f0, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 0
+键: [5]
+子节点指针: [0x62169bdd3480, 0x62169bdd4cb0]
+
+节点地址: 0x62169bdd4b70, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4a30, 父索引: 1
+键: [16]
+子节点指针: [0x62169bdd4ad0, 0x62169bdd4df0]
+
+节点地址: 0x62169bdd4e40, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4da0, 父索引: 0
+键: [30]
+子节点指针: [0x62169bdd49e0, 0x62169bdd4c10]
+
+节点地址: 0x62169bdd4a80, 类型: 非叶节点, 键数量: 1, 父节点: 0x62169bdd4da0, 父索引: 1
+键: [78]
+子节点指针: [0x62169bdd4990, 0x62169bdd4bc0]
+
+------------------------ 第 4 层 ------------------------
+节点地址: 0x62169bdd3480, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd48f0, 父索引: 0
+键: [3, 4]
+
+节点地址: 0x62169bdd4cb0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd48f0, 父索引: 1
+键: [5]
+
+节点地址: 0x62169bdd4ad0, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4b70, 父索引: 0
+键: [14, 15]
+
+节点地址: 0x62169bdd4df0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4b70, 父索引: 1
+键: [16]
+
+节点地址: 0x62169bdd49e0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4e40, 父索引: 0
+键: [29]
+
+节点地址: 0x62169bdd4c10, 类型: 叶节点, 键数量: 2, 父节点: 0x62169bdd4e40, 父索引: 1
+键: [30, 40]
+
+节点地址: 0x62169bdd4990, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 0
+键: [49]
+
+节点地址: 0x62169bdd4bc0, 类型: 叶节点, 键数量: 1, 父节点: 0x62169bdd4a80, 父索引: 1
+键: [78]
+
 
 === 验证删除 key=77 === 已删除（正常）
-

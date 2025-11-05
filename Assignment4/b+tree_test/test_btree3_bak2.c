@@ -6,9 +6,6 @@
 #define MAX_KEYS 2  // 支持奇数/偶数测试
 #define DELETED_KEY -1  // 已删除键的标记值
 
-// 添加一个全局变量用于跟踪日志文件
-FILE* global_log_file = NULL;
-
 // B+树节点结构体
 typedef struct BPlusNode {
     int is_leaf;                  // 1=叶节点, 0=非叶节点
@@ -39,10 +36,10 @@ void* search(BPlusNode* node, int key);
 // void redistribute_leaf_from_right(BPlusNode* parent, int curr_idx);
 
 void delete_key(BPlusTree* tree, int key);
-void print_bplus_tree(BPlusTree* tree, const char* operation_desc, int print_to_console);
-void log_message(const char* msg, int print_to_console);
+void print_bplus_tree(BPlusTree* tree, const char* operation_desc, FILE* log_file);
+void log_message(const char* msg, FILE* log_file);
 int get_tree_height(BPlusNode* node);
-void print_level_nodes(BPlusNode* node, int current_level, int target_level, int print_to_console);
+void print_level_nodes(BPlusNode* node, int current_level, int target_level, FILE* log_file);
 int get_node_index_in_parent(BPlusNode* node);
 
 int get_min_keys(BPlusNode* node);
@@ -58,19 +55,11 @@ void delete_node(BPlusTree *tree, BPlusNode *node, int key);
 void validate_parent_pointers(BPlusTree *tree);
 void validate_min_keys_constraint(BPlusTree *tree);
 
-// 日志输出函数 - 支持仅输出到文件或同时输出到终端和文件
-void log_message(const char* msg, int print_to_console) {
-    if (print_to_console) {
-        printf("%s", msg);
-    }
-    if (global_log_file) {
-        fprintf(global_log_file, "%s", msg);
-    }
-}
 
-// 简化版日志函数 - 只输出到终端（关键信息）
-void console_log(const char* msg) {
+// 日志输出（同时输出到控制台和文件）
+void log_message(const char* msg, FILE* log_file) {
     printf("%s", msg);
+    fprintf(log_file, "%s", msg);
 }
 
 // 获取节点在父节点中的索引（辅助打印）
@@ -113,78 +102,83 @@ int get_tree_height(BPlusNode* node) {
     
     return 1 + get_tree_height((BPlusNode*)node->ptrs[0]);  // 非叶节点高度=1+子节点高度
 }
-
-// 辅助函数：递归打印特定层级的所有节点
-void print_level_nodes(BPlusNode* node, int current_level, int target_level, int print_to_console) {
+// 辅助函数：打印特定层级的所有节点
+void print_level_nodes(BPlusNode* node, int current_level, int target_level, FILE* log_file) {
     if (!node) return;
     
     // 到达目标层，打印节点信息
     if (current_level == target_level) {
         char msg[1024];
+        snprintf(msg, sizeof(msg), "  Level %d | %s | Parent Index: %d | Key Count: %d | Keys: [ ",
+                current_level, node->is_leaf ? "Leaf Node" : "Non-Leaf Node",
+                node->parent ? get_node_index_in_parent(node) : -1, node->key_num);
+        log_message(msg, log_file);
         
-        // 打印节点基本信息
-        snprintf(msg, sizeof(msg), "节点地址: %p, 类型: %s, 键数量: %d, 父节点: %p, 父索引: %d\n", 
-                node, node->is_leaf ? "叶节点" : "非叶节点", node->key_num, 
-                node->parent, get_node_index_in_parent(node));
-        log_message(msg, print_to_console);
+        // 打印键信息
+        int valid_key_count = 0;
+        for (int i = 0; i < node->key_num; i++) {
+            // 只显示数据不为NULL的有效键
+            if (node->ptrs[i] != NULL) {
+                if (valid_key_count > 0) {
+                    log_message(", ", log_file);
+                }
+                snprintf(msg, sizeof(msg), "%d", node->keys[i]);
+                log_message(msg, log_file);
+                valid_key_count++;
+            }
+        }
+        log_message(" ] | Pointers: [ ", log_file);
         
-        // 打印键
-        if (node->key_num > 0) {
-            snprintf(msg, sizeof(msg), "键: [");
-            log_message(msg, print_to_console);
-            
+        // 打印指针信息
+        int valid_ptr_count = 0;
+        if (node->is_leaf) {
+            // 叶节点指针是数据指针和下一个叶节点
             for (int i = 0; i < node->key_num; i++) {
-                // 检查键是否为删除标记
-                if (node->is_leaf && node->keys[i] == DELETED_KEY) {
-                    snprintf(msg, sizeof(msg), "(已删除)");
-                } else {
-                    snprintf(msg, sizeof(msg), "%d", node->keys[i]);
-                }
-                log_message(msg, print_to_console);
-                
-                if (i < node->key_num - 1) {
-                    log_message(", ", print_to_console);
+                if (node->ptrs[i] != NULL) {
+                    if (valid_ptr_count > 0) {
+                        log_message(", ", log_file);
+                    }
+                    snprintf(msg, sizeof(msg), "data=%d", *((int*)node->ptrs[i]));
+                    log_message(msg, log_file);
+                    valid_ptr_count++;
                 }
             }
-            log_message("]\n", print_to_console);
+            // 打印next_leaf指针 - 关键点：加强安全检查
+            if (MAX_KEYS + 1 < sizeof(node->ptrs)/sizeof(node->ptrs[0])) {
+                if (node->ptrs[MAX_KEYS + 1] != NULL) {
+                    if (valid_ptr_count > 0) {
+                        log_message(", ", log_file);
+                    }
+                    snprintf(msg, sizeof(msg), "next_leaf=%p", node->ptrs[MAX_KEYS + 1]);
+                    log_message(msg, log_file);
+                    valid_ptr_count++;
+                }
+            }
         } else {
-            log_message("键: []\n", print_to_console);
-        }
-        
-        // 打印指针（对于非叶节点）
-        if (!node->is_leaf && node->key_num > 0) {
-            snprintf(msg, sizeof(msg), "子节点指针: [");
-            log_message(msg, print_to_console);
-            
+            // 非叶节点指针都是子节点指针
             for (int i = 0; i <= node->key_num; i++) {
-                if (node->ptrs[i]) {
-                    snprintf(msg, sizeof(msg), "%p", node->ptrs[i]);
-                } else {
-                    snprintf(msg, sizeof(msg), "NULL");
-                }
-                log_message(msg, print_to_console);
-                
-                if (i < node->key_num) {
-                    log_message(", ", print_to_console);
+                if (node->ptrs[i] != NULL) {
+                    if (valid_ptr_count > 0) {
+                        log_message(", ", log_file);
+                    }
+                    snprintf(msg, sizeof(msg), "child=%p", node->ptrs[i]);
+                    log_message(msg, log_file);
+                    valid_ptr_count++;
                 }
             }
-            log_message("]\n", print_to_console);
         }
-        
-        log_message("\n", print_to_console);
-        return;
-    }
-    
-    // 非目标层，继续递归
-    if (!node->is_leaf) {
-        for (int i = 0; i <= node->key_num; i++) {
-            if (node->ptrs[i]) {
-                print_level_nodes((BPlusNode*)node->ptrs[i], current_level + 1, target_level, print_to_console);
+        log_message(" ]\n", log_file);
+    } else if (current_level < target_level) {
+        // 非目标层，继续递归 - 增强检查，确保安全访问
+        if (!node->is_leaf) {
+            for (int i = 0; i <= node->key_num; i++) {
+                if (node->ptrs[i] != NULL) { // 添加NULL检查，防止段错误
+                    print_level_nodes((BPlusNode*)node->ptrs[i], current_level + 1, target_level, log_file);
+                }
             }
         }
     }
 }
-
 // 创建新节点
 BPlusNode* create_node(int is_leaf) {
     BPlusNode* node = (BPlusNode*)malloc(sizeof(BPlusNode));
@@ -244,33 +238,21 @@ BPlusNode* find_leaf_node(BPlusNode* node, int key) {
     
     return find_leaf_node((BPlusNode*)node->ptrs[idx], key);
 }
-
+// 辅助函数： 在叶节点内查找键。
 // 修复后的search_in_leaf函数，确保在删除操作后仍能正确搜索
 void* search_in_leaf(BPlusNode* leaf, int key) {
     if (!leaf || !leaf->is_leaf) return NULL;
     
-    BPlusNode* first_leaf; // 先声明变量
-    // 首先从当前叶节点开始查找
-    BPlusNode* current = leaf;
-    
-    // 向前遍历链表，找到第一个节点
-    while (current->parent && current == ((BPlusNode*)current->parent)->ptrs[0]) {
-        current = current->parent;
+    // 首先找到链表的第一个节点，确保搜索范围覆盖所有可能的节点
+    BPlusNode* first_leaf = leaf;
+    while (first_leaf && first_leaf->parent) {
+        // 这是一个简化的实现，实际需要根据父节点找到链表的第一个节点
+        // 在实际应用中，可能需要额外的字段来跟踪链表的头节点
+        break;
     }
     
-    if (current->is_leaf) {
-        // 如果回溯到根节点还是叶节点（单节点树），直接使用当前节点
-        first_leaf = current;
-    } else {
-        // 找到最左边的叶节点
-        while (!current->is_leaf) {
-            current = (BPlusNode*)current->ptrs[0];
-        }
-        first_leaf = current; // 添加这一行
-    }
-    
-    // 从最左边的叶节点开始，沿着链表遍历直到找到目标键或确定不存在
-    current = first_leaf;
+    // 从第一个叶节点开始，沿着链表遍历直到找到目标键或确定不存在
+    BPlusNode* current = first_leaf;
     while (current) {
         // 检查当前叶节点中的所有键
         for (int i = 0; i < current->key_num; i++) {
@@ -294,7 +276,6 @@ void* search_in_leaf(BPlusNode* leaf, int key) {
     
     return NULL; // 遍历完整个链表都没找到
 }
-
 // 修复后的find_key_index函数，处理删除标记
 int find_key_index(BPlusNode* node, int key) {
     int idx = 0;
@@ -424,7 +405,7 @@ void insert_non_full(BPlusNode* node, int key, void* data) {
     if (exist_idx < node->key_num && node->keys[exist_idx] == key) {
         char msg[64];
         snprintf(msg, sizeof(msg), "警告：键 %d 已存在，跳过插入\n", key);
-        log_message(msg, 1); // 1表示输出到终端
+        log_message(msg, stdout); // 输出警告
         return;
     }
 
@@ -527,7 +508,8 @@ int get_min_keys(BPlusNode  *node) {
     }
 }
 
-// 修改delete_leaf_key函数，正确实现删除逻辑
+// 修改delete_leaf_key函数，增强对空叶节点的处理
+// 删除叶子节点中的键
 void delete_leaf_key(BPlusTree *tree, BPlusNode *node, int key) {
     int i, j;
     int key_index = -1;
@@ -542,9 +524,6 @@ void delete_leaf_key(BPlusTree *tree, BPlusNode *node, int key) {
     
     // 如果找不到键，直接返回
     if (key_index == -1) {
-        char msg[128];
-        snprintf(msg, sizeof(msg), "未找到键 %d，删除失败\n", key);
-        log_message(msg, 1);
         return;
     }
     
@@ -556,21 +535,16 @@ void delete_leaf_key(BPlusTree *tree, BPlusNode *node, int key) {
     
     // 更新键数量
     node->key_num--;
-    
-    // 关键修复：正确设置删除标记并清空指针
-    if (node->key_num >= 0) {
-        node->keys[node->key_num] = -1; // 设置为删除标记
-        node->ptrs[node->key_num] = NULL; // 清空指针
-    }
+    node->ptrs[node->key_num] = NULL; // 清空最后一个指针
     
     // 添加调试信息
     char msg[128];
     snprintf(msg, sizeof(msg), "删除叶子节点键 %d 成功，剩余键数量: %d\n", key, node->key_num);
-    log_message(msg, 1); // 1表示输出到终端
+    log_message(msg, stdout); // 临时输出到控制台用于调试
     
     // 检查是否需要处理下溢
     if (node != tree->root && node->key_num < get_min_keys(node)) {
-        log_message("叶子节点发生下溢，准备处理\n", 1); // 1表示输出到终端
+        log_message("叶子节点发生下溢，准备处理\n", stdout); // 临时输出到控制台用于调试
         handle_underflow(tree, node);
     }
 }
@@ -637,7 +611,7 @@ void redistribute_leaf_from_left(BPlusNode *node, BPlusNode *left_sibling, BPlus
     
     char msg[128];
     snprintf(msg, sizeof(msg), "从左侧兄弟节点重分配键到叶节点，当前节点键数量: %d\n", node->key_num);
-    log_message(msg, 1); // 1表示输出到终端
+    log_message(msg, stdout); // 临时输出到控制台用于调试
 }
 
 // 从右侧兄弟节点重分配键到当前叶节点
@@ -670,7 +644,7 @@ void redistribute_leaf_from_right(BPlusNode *node, BPlusNode *right_sibling, BPl
     
     char msg[128];
     snprintf(msg, sizeof(msg), "从右侧兄弟节点重分配键到叶节点，当前节点键数量: %d\n", node->key_num);
-    log_message(msg, 1); // 1表示输出到终端
+    log_message(msg, stdout); // 临时输出到控制台用于调试
 }
 
 // 从左侧兄弟节点重分配键到当前非叶节点
@@ -704,7 +678,7 @@ void redistribute_non_leaf_from_left(BPlusNode *node, BPlusNode *left_sibling, B
     
     char msg[128];
     snprintf(msg, sizeof(msg), "从左侧兄弟节点重分配键到非叶节点，当前节点键数量: %d\n", node->key_num);
-    log_message(msg, 1); // 1表示输出到终端
+    log_message(msg, stdout); // 临时输出到控制台用于调试
 }
 
 // 从右侧兄弟节点重分配键到当前非叶节点
@@ -738,7 +712,7 @@ void redistribute_non_leaf_from_right(BPlusNode *node, BPlusNode *right_sibling,
     
     char msg[128];
     snprintf(msg, sizeof(msg), "从右侧兄弟节点重分配键到非叶节点，当前节点键数量: %d\n", node->key_num);
-    log_message(msg, 1); // 1表示输出到终端
+    log_message(msg, stdout); // 临时输出到控制台用于调试
 }
 
 // 合并两个叶节点
@@ -774,7 +748,7 @@ void merge_leaf(BPlusNode *left, BPlusNode *right, BPlusNode *parent, int index)
     // 6. 标记右侧节点为已删除（在实际释放前）
     char msg[128];
     snprintf(msg, sizeof(msg), "合并叶节点，左侧节点键数量: %d\n", left->key_num);
-    log_message(msg, 1); // 1表示输出到终端
+    log_message(msg, stdout); // 临时输出到控制台用于调试
 }
 
 // 合并两个非叶节点
@@ -815,7 +789,7 @@ void merge_non_leaf(BPlusNode *left, BPlusNode *right, BPlusNode *parent, int in
     
     char msg[128];
     snprintf(msg, sizeof(msg), "合并非叶节点，左侧节点键数量: %d\n", left->key_num);
-    log_message(msg, 1); // 1表示输出到终端
+    log_message(msg, stdout); // 临时输出到控制台用于调试
 }
 
 // 处理节点下溢
@@ -927,7 +901,7 @@ void validate_parent_pointers_recursive(BPlusTree *tree, BPlusNode *node, BPlusN
         char msg[128];
         snprintf(msg, sizeof(msg), "父指针不一致: 节点 %p 的父节点应为 %p，但实际是 %p\n", 
                 node, expected_parent, node->parent);
-        log_message(msg, 1); // 父指针错误是严重问题，同时输出到终端和文件
+        log_message(msg, stdout);
     }
     
     // 递归检查所有子节点
@@ -957,7 +931,7 @@ void validate_min_keys_constraint_recursive(BPlusTree *tree, BPlusNode *node) {
         if (node->key_num < 0) {
             char msg[128];
             snprintf(msg, sizeof(msg), "根节点键数量为负: %d\n", node->key_num);
-            log_message(msg, 1); // 根节点错误是严重问题，同时输出到终端和文件
+            log_message(msg, stdout);
         }
     } else {
         // 非根节点需要满足最小键数约束
@@ -966,7 +940,7 @@ void validate_min_keys_constraint_recursive(BPlusTree *tree, BPlusNode *node) {
             char msg[128];
             snprintf(msg, sizeof(msg), "节点 %p 键数量不足: 当前 %d，最小 %d\n", 
                     node, node->key_num, min_keys);
-            log_message(msg, 1); // 键数量不足是严重问题，同时输出到终端和文件
+            log_message(msg, stdout);
         }
     }
     
@@ -985,44 +959,36 @@ void validate_min_keys_constraint(BPlusTree *tree) {
     validate_min_keys_constraint_recursive(tree, tree->root);
 }
 
+
 // 删除键的入口函数
 void delete_key(BPlusTree *tree, int key) {
     char msg[128];
-    
-    // 只在终端输出关键信息
-    snprintf(msg, sizeof(msg), "正在删除 key=%d...\n", key);
-    console_log(msg);
-    
-    // 同时输出到文件和终端的重要操作标记
     snprintf(msg, sizeof(msg), "=== 操作: 删除 key=%d ===\n", key);
-    log_message(msg, 0); // 0表示不输出到终端
+    log_message(msg, stdout);
     
     // 查找包含该键的叶子节点
-    BPlusNode *leaf_node = find_leaf_node(tree->root, key);
+    BPlusNode *leaf_node = (BPlusNode*)search(tree->root, key);
     
     if (!leaf_node) {
         snprintf(msg, sizeof(msg), "键 %d 不存在，删除失败\n", key);
-        log_message(msg, 0);
-        console_log("删除失败：键不存在\n");
+        log_message(msg, stdout);
         return;
     }
     
-    // 修复：使用找到的leaf_node作为参数
-    delete_leaf_key(tree, leaf_node, key);
+    // 在叶子节点中删除该键
+    delete_leaf_key(tree, (BPlusNode*)tree->root, key);
     
-    // 打印删除后的树结构（只输出到文件）
-    print_bplus_tree(tree, "删除后的树结构", 0);
+    // 打印删除后的树结构
+    print_bplus_tree(tree, "删除后的树结构", stdout);
     
     // 验证删除结果
-    void* result = search(tree->root, key);
-    if (!result) {
+    leaf_node = (BPlusNode*)search(tree->root, key);
+    if (!leaf_node) {
         snprintf(msg, sizeof(msg), "=== 验证删除 key=%d === 已删除（正常）\n", key);
-        console_log("删除成功\n");
     } else {
         snprintf(msg, sizeof(msg), "=== 验证删除 key=%d === 删除失败（异常）\n", key);
-        console_log("删除失败\n");
     }
-    log_message(msg, 0);
+    log_message(msg, stdout);
     
     // 验证父指针的一致性
     validate_parent_pointers(tree);
@@ -1032,13 +998,13 @@ void delete_key(BPlusTree *tree, int key) {
 }
 
 // 打印完整的B+树结构（所有层级节点）
-void print_bplus_tree(BPlusTree* tree, const char* operation_desc, int print_to_console) {
+void print_bplus_tree(BPlusTree* tree, const char* operation_desc, FILE* log_file) {
     char msg[1024];
     snprintf(msg, sizeof(msg), "=== 操作: %s ===\n", operation_desc);
-    log_message(msg, print_to_console);
+    log_message(msg, log_file);
 
     if (!tree->root) {
-        log_message("树为空\n", print_to_console);
+        log_message("树为空\n", log_file);
         return;
     }
 
@@ -1046,15 +1012,15 @@ void print_bplus_tree(BPlusTree* tree, const char* operation_desc, int print_to_
     int height = get_tree_height(tree->root);
     snprintf(msg, sizeof(msg), "B+树结构 (最大键数 n=%d, 树高=%d, 根节点=%p)\n", 
             MAX_KEYS, height, tree->root);
-    log_message(msg, print_to_console);
+    log_message(msg, log_file);
 
     // 逐层打印所有节点
     for (int level = 1; level <= height; level++) {
         snprintf(msg, sizeof(msg), "------------------------ 第 %d 层 ------------------------\n", level);
-        log_message(msg, print_to_console);
-        print_level_nodes(tree->root, 1, level, print_to_console);
+        log_message(msg, log_file);
+        print_level_nodes(tree->root, 1, level, log_file);
     }
-    log_message("\n", print_to_console);
+    log_message("\n", log_file);
 }
 
 // 测试主函数
@@ -1064,9 +1030,6 @@ int main() {
         perror("无法打开日志文件");
         return 1;
     }
-    
-    // 设置全局日志文件
-    global_log_file = log_file;
 
     BPlusTree tree;
     init_bplus_tree(&tree);
@@ -1077,25 +1040,16 @@ int main() {
 
     int n = sizeof(keys) / sizeof(keys[0]);
 
-    console_log("开始插入测试...\n");
     // 插入测试
     for (int i = 0; i < n; i++) {
         insert(&tree, keys[i], &data[i]);
         char desc[128];
         snprintf(desc, sizeof(desc), "插入 key=%d (data=%d)", keys[i], data[i]);
-        print_bplus_tree(&tree, desc, 0); // 0表示不输出到终端
-        
-        // 每插入几个键输出一次进度
-        if ((i + 1) % 5 == 0) {
-            snprintf(desc, sizeof(desc), "已插入 %d/%d 个键\n", i + 1, n);
-            console_log(desc);
-        }
+        print_bplus_tree(&tree, desc, log_file);
     }
-    console_log("插入测试完成\n\n");
 
     // 查找测试（覆盖所有已插入的键）
-    console_log("开始查找测试...\n");
-    log_message("=== 开始查找测试 ===\n", 0);
+    log_message("=== 开始查找测试 ===\n", log_file);
     for (int i = 0; i < n; i++) {
         int* result = (int*)search(tree.root, keys[i]);
         char msg[128];
@@ -1104,7 +1058,7 @@ int main() {
         } else {
             snprintf(msg, sizeof(msg), "=== 查找 key=%d === 未找到（异常）\n", keys[i]);
         }
-        log_message(msg, 0);
+        log_message(msg, log_file);
     }
     // 查找不存在的键
     int non_exist_key = 99;
@@ -1115,31 +1069,28 @@ int main() {
     } else {
         snprintf(msg, sizeof(msg), "=== 查找 key=%d === 未找到（正常）\n", non_exist_key);
     }
-    log_message(msg, 0);
-    log_message("=== 查找测试结束 ===\n\n", 0);
-    console_log("查找测试完成\n\n");
+    log_message(msg, log_file);
+    log_message("=== 查找测试结束 ===\n\n", log_file);
 
     // 删除测试
-    console_log("开始删除测试...\n");
     int delete_keys[] = {13, 23, 45, 11, 77};
     int dk_len = sizeof(delete_keys) / sizeof(delete_keys[0]);
     for (int i = 0; i < dk_len; i++) {
         delete_key(&tree, delete_keys[i]);
-        // char desc[128];
-        // snprintf(desc, sizeof(desc), "删除 key=%d", delete_keys[i]);
-        // print_bplus_tree(&tree, desc, 0);
+        char desc[128];
+        snprintf(desc, sizeof(desc), "删除 key=%d", delete_keys[i]);
+        print_bplus_tree(&tree, desc, log_file);
 
-        // // 验证删除后的键是否存在
-        // int* del_result = (int*)search(tree.root, delete_keys[i]);
-        // char del_msg[128];
-        // if (del_result) {
-        //     snprintf(del_msg, sizeof(del_msg), "=== 验证删除 key=%d === 仍存在（异常）\n\n", delete_keys[i]);
-        // } else {
-        //     snprintf(del_msg, sizeof(del_msg), "=== 验证删除 key=%d === 已删除（正常）\n\n", delete_keys[i]);
-        // }
-        // log_message(del_msg, 0);
+        // 验证删除后的键是否存在
+        int* del_result = (int*)search(tree.root, delete_keys[i]);
+        char del_msg[128];
+        if (del_result) {
+            snprintf(del_msg, sizeof(del_msg), "=== 验证删除 key=%d === 仍存在（异常）\n\n", delete_keys[i]);
+        } else {
+            snprintf(del_msg, sizeof(del_msg), "=== 验证删除 key=%d === 已删除（正常）\n\n", delete_keys[i]);
+        }
+        log_message(del_msg, log_file);
     }
-    console_log("删除测试完成\n");
 
     fclose(log_file);
     // 释放B+树内存
