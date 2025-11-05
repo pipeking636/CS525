@@ -34,11 +34,7 @@ void split_non_leaf(BPlusNode* parent, int index);
 void insert_non_full(BPlusNode* node, int key, void* data);
 void insert(BPlusTree* tree, int key, void* data);
 void* search(BPlusNode* node, int key);
-
-// void redistribute_leaf(BPlusNode* parent, int curr_idx);
-// void redistribute_non_leaf(BPlusNode* parent, int curr_idx);
-// void redistribute_leaf_from_right(BPlusNode* parent, int curr_idx);
-
+void update(BPlusTree* tree, int key, void* new_data); 
 void delete_key(BPlusTree* tree, int key);
 void print_bplus_tree(BPlusTree* tree, const char* operation_desc, int print_to_console);
 void log_message(const char* msg, int print_to_console);
@@ -1032,6 +1028,50 @@ void delete_key(BPlusTree *tree, int key) {
     validate_min_keys_constraint(tree);
 }
 
+// 更新已存在键的数据
+void update(BPlusTree* tree, int key, void* new_data) {
+    // 1. 查找键是否存在
+    void* existing_data = search(tree->root, key);
+    
+    if (existing_data == NULL) {
+        // 键不存在，输出错误信息
+        char msg[128];
+        snprintf(msg, sizeof(msg), "更新失败：键 %d 不存在\n", key);
+        console_log(msg);
+        return;
+    }
+    
+    // 2. 找到包含该键的叶节点
+    BPlusNode* leaf_node = find_leaf_node(tree->root, key);
+    
+    // 3. 在叶节点中找到键的位置
+    int key_index = -1;
+    for (int i = 0; i < leaf_node->key_num; i++) {
+        if (leaf_node->keys[i] == key) {
+            key_index = i;
+            break;
+        }
+    }
+    
+    // 4. 直接更新数据（不调整任何指针结构）
+    if (key_index != -1) {
+        int old_data = *((int*)leaf_node->ptrs[key_index]);
+        int new_data_value = *((int*)new_data);
+        leaf_node->ptrs[key_index] = new_data;
+        
+        // 记录更新日志，同时显示key和data值
+        char msg[128];
+        snprintf(msg, sizeof(msg), "=== 更新 key=%d === 成功: 旧数据=%d -> 新数据=%d\n", 
+                key, old_data, new_data_value);
+        log_message(msg, 0);
+        
+        char console_msg[128];
+        snprintf(console_msg, sizeof(console_msg), "更新成功: key=%d, 旧数据=%d -> 新数据=%d\n", 
+                key, old_data, new_data_value);
+        console_log(console_msg);
+    }
+}
+
 // 打印完整的B+树结构（所有层级节点）
 void print_bplus_tree(BPlusTree* tree, const char* operation_desc, int print_to_console) {
     char msg[1024];
@@ -1143,6 +1183,37 @@ int main() {
         print_bplus_tree(&tree, desc, 0); // 0表示不输出到终端
     }
     console_log("删除后再插入测试完成\n");
+
+    // 更新测试
+    console_log("开始更新测试...\n");
+    log_message("=== 开始更新测试 ===\n", 0);
+
+    // 准备更新数据（选择肯定存在的键）
+    int update_keys[] = {3, 5, 16};
+    int new_data_values[] = {3000, 5000, 16000};
+    int uk_len = sizeof(update_keys) / sizeof(update_keys[0]);
+
+    for (int i = 0; i < uk_len; i++) {
+        char msg[128];
+        snprintf(msg, sizeof(msg), "尝试更新键 %d -> 新数据=%d...\n", 
+                update_keys[i], new_data_values[i]);
+        console_log(msg);
+        update(&tree, update_keys[i], &new_data_values[i]);
+    }
+
+    // 验证更新结果
+    console_log("\n验证更新结果...\n");
+    for (int i = 0; i < uk_len; i++) {
+        int* result = (int*)search(tree.root, update_keys[i]);
+        if (result) {
+            char msg[128];
+            snprintf(msg, sizeof(msg), "键 %d 的数据值已更新为: %d\n", 
+                    update_keys[i], *result);
+            console_log(msg);
+        }
+    }
+
+    console_log("更新测试完成\n");
 
     fclose(log_file);
     // 释放B+树内存
