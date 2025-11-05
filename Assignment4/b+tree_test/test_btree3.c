@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 // 配置参数（节点最大键数）
 #define MAX_KEYS 2  // 支持奇数/偶数测试
@@ -260,13 +261,13 @@ void* search_in_leaf(BPlusNode* leaf, int key) {
     
     if (current->is_leaf) {
         // 如果回溯到根节点还是叶节点（单节点树），直接使用当前节点
-        first_leaf = current;
+        first_leaf = current; // 修复：在if分支中也给first_leaf赋值
     } else {
         // 找到最左边的叶节点
         while (!current->is_leaf) {
             current = (BPlusNode*)current->ptrs[0];
         }
-        first_leaf = current; // 添加这一行
+        first_leaf = current;
     }
     
     // 从最左边的叶节点开始，沿着链表遍历直到找到目标键或确定不存在
@@ -1074,6 +1075,7 @@ int main() {
     // 测试数据（确保无重复键）
     int keys[] = {13,  49,  23,  45,  77,  3,   29,  14,  11,  78,  30,  40,  4,   5,   15,  16};
     int data[] = {111, 333, 222, 444, 555, 666, 777, 888, 999, 100, 101, 102, 103, 104, 105, 106};
+    int searchTestKeys[] = {13, 49, 23, 45, 27/*不存在的键*/, 77, 3, 29, 14, 11, 22/*不存在的键*/, 78, 30, 40, 4, 5, 15, 16, 100/*不存在的键*/};
 
     int n = sizeof(keys) / sizeof(keys[0]);
 
@@ -1096,48 +1098,37 @@ int main() {
     // 查找测试（覆盖所有已插入的键）
     console_log("开始查找测试...\n");
     log_message("=== 开始查找测试 ===\n", 0);
+    n=sizeof(searchTestKeys)/sizeof(searchTestKeys[0]);
     for (int i = 0; i < n; i++) {
-        int* result = (int*)search(tree.root, keys[i]);
+        int* result = (int*)search(tree.root, searchTestKeys[i]);  // 使用searchTestKeys[i]进行搜索
         char msg[128];
         if (result) {
-            snprintf(msg, sizeof(msg), "=== 查找 key=%d === 找到, data=%d\n", keys[i], *result);
+            snprintf(msg, sizeof(msg), "=== 查找 key=%d === 找到, data=%d\n", searchTestKeys[i], *result);  // 修复：打印searchTestKeys[i]
         } else {
-            snprintf(msg, sizeof(msg), "=== 查找 key=%d === 未找到（异常）\n", keys[i]);
+            // 根据键是否应该存在来标记结果是否正常
+            bool should_exist = false;
+            for (int j = 0; j < sizeof(keys)/sizeof(keys[0]); j++) {
+                if (keys[j] == searchTestKeys[i]) {
+                    should_exist = true;
+                    break;
+                }
+            }
+            if (should_exist) {
+                snprintf(msg, sizeof(msg), "=== 查找 key=%d === 未找到（异常）\n", searchTestKeys[i]);
+            } else {
+                snprintf(msg, sizeof(msg), "=== 查找 key=%d === 未找到（正常）\n", searchTestKeys[i]);
+            }
         }
         log_message(msg, 0);
     }
-    // 查找不存在的键
-    int non_exist_key = 99;
-    int* result = (int*)search(tree.root, non_exist_key);
-    char msg[128];
-    if (result) {
-        snprintf(msg, sizeof(msg), "=== 查找 key=%d === 找到（异常）, data=%d\n", non_exist_key, *result);
-    } else {
-        snprintf(msg, sizeof(msg), "=== 查找 key=%d === 未找到（正常）\n", non_exist_key);
-    }
-    log_message(msg, 0);
-    log_message("=== 查找测试结束 ===\n\n", 0);
-    console_log("查找测试完成\n\n");
 
+    
     // 删除测试
     console_log("开始删除测试...\n");
     int delete_keys[] = {13, 23, 45, 11, 77};
     int dk_len = sizeof(delete_keys) / sizeof(delete_keys[0]);
     for (int i = 0; i < dk_len; i++) {
         delete_key(&tree, delete_keys[i]);
-        // char desc[128];
-        // snprintf(desc, sizeof(desc), "删除 key=%d", delete_keys[i]);
-        // print_bplus_tree(&tree, desc, 0);
-
-        // // 验证删除后的键是否存在
-        // int* del_result = (int*)search(tree.root, delete_keys[i]);
-        // char del_msg[128];
-        // if (del_result) {
-        //     snprintf(del_msg, sizeof(del_msg), "=== 验证删除 key=%d === 仍存在（异常）\n\n", delete_keys[i]);
-        // } else {
-        //     snprintf(del_msg, sizeof(del_msg), "=== 验证删除 key=%d === 已删除（正常）\n\n", delete_keys[i]);
-        // }
-        // log_message(del_msg, 0);
     }
     console_log("删除测试完成\n");
 
