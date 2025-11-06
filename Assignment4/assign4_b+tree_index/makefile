@@ -1,6 +1,6 @@
 # 定义编译器和编译选项
 CC = gcc
-CFLAGS = -g -Wall   # 无需 -c，需要链接
+CFLAGS = -g -Wall  -DDEBUG # 无需 -c，需要链接
 
 # 目标可执行文件
 TARGET1 = test_assign4_1

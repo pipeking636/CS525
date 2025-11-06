@@ -26,6 +26,8 @@ typedef int RC; // define a new type for error code
 #define RC_FILE_ALREADY_EXISTS 9
 #define RC_OUT_OF_MEMORY 100       // 内存不足
 
+#define RC_RM_CREATE_NODE_FAILED 150
+
 #define RC_RM_COMPARE_VALUE_OF_DIFFERENT_DATATYPE 200
 #define RC_RM_EXPR_RESULT_IS_NOT_BOOLEAN 201
 #define RC_RM_BOOLEAN_EXPR_ARG_IS_NOT_BOOLEAN 202
