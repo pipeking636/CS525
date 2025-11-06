@@ -1,0 +1,14 @@
+Creating B+ tree: testidx, key type: 0, max keys: 2
+Opening B+ tree: testidx, key type: 0, max keys: 2
+Inserting key: 1, RID: (1,1)
+Insertion completed. Current node count: 1, entry count: 1
+Inserting key: 11, RID: (2,3)
+Insertion completed. Current node count: 3, entry count: 2
+Inserting key: 13, RID: (1,2)
+Insertion completed. Current node count: 6, entry count: 3
+Inserting key: 17, RID: (3,5)
+Insertion completed. Current node count: 7, entry count: 4
+Inserting key: 23, RID: (4,4)
+Insertion completed. Current node count: 11, entry count: 5
+Inserting key: 52, RID: (3,2)
+Insertion completed. Current node count: 12, entry count: 6
